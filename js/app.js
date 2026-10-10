@@ -1,6 +1,7 @@
-/* Builds the page from the data in data.js. */
+/* Builds the page from the data in data.js and the photos in photos.js. */
 (function () {
-  const { LEGS, STOPS, MOVES, FLIGHTS, PLACES, CHECKLIST, EVENTS } = window;
+  const { LEGS, STOPS, MOVES, FLIGHTS, PLACES, TAGS, COUNTRIES, CHECKLIST, EVENTS, PhotoRank } = window;
+  const PHOTOS = window.PHOTOS || {};
   const byId = Object.fromEntries(STOPS.map(s => [s.id, s]));
   const $ = sel => document.querySelector(sel);
   const DAY = 86400000;
@@ -20,6 +21,7 @@
   function showTab() {
     const [tab, sub] = location.hash.slice(1).split("/");
     const name = TABS.includes(tab) ? tab : "overview";
+    closeViewer();
     TABS.forEach(t => { $("#tab-" + t).hidden = t !== name; });
     document.querySelectorAll("[data-tab]").forEach(a => a.classList.toggle("is-on", a.dataset.tab === name));
     window.scrollTo(0, 0);
@@ -68,6 +70,50 @@
         style="left:${pct(b.start)}%;width:${pct(b.end) - pct(b.start)}%;background:${LEGS[b.leg].colour}">${LEGS[b.leg].name}</div>`).join("")}
     </div>
     <div class="gantt-scale">${scaleDates.map(t => `<span style="left:${pct(t)}%">${fmt(t)}</span>`).join("")}</div>`;
+
+  // ---------- Photos ----------
+  // photos.js holds the photos picked for each place by tools/pick-photos.mjs.
+  // A place added since then gets photos found live in the browser, until the picker runs again.
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const live = {};
+  const photosFor = (p, key) => {
+    const entry = live[p.id] || PHOTOS[p.id];
+    return (entry && entry[key] && entry[key].photos) || [];
+  };
+
+  // A photo that loads the right size for the screen.
+  // widths are Wikimedia's standard sizes to offer. sizes says how wide it shows.
+  function img(ph, widths, sizes) {
+    const set = new Map();
+    widths.forEach(w => { const url = PhotoRank.sized(ph, w); if (!set.has(url)) set.set(url, Math.min(w, ph.w)); });
+    return `<img src="${esc(PhotoRank.sized(ph, widths[0]))}" srcset="${[...set].map(([url, w]) => `${esc(url)} ${w}w`).join(", ")}"
+      sizes="${sizes}" alt="${esc(ph.caption)}" loading="lazy" decoding="async">`;
+  }
+
+  // A photo that can't load (no internet) just hides, leaving the soft background.
+  document.addEventListener("error", e => { if (e.target.tagName === "IMG") e.target.classList.add("broken"); }, true);
+
+  // Does this place have a search that photos.js doesn't cover yet?
+  // whole is every photo on its page. Otherwise just the big photo for its card.
+  const justHero = p => ({ id: p.id, hero: p.hero, where: p.where, country: p.country });
+  function missing(p, whole) {
+    const entry = live[p.id] || PHOTOS[p.id] || {};
+    return PhotoRank.subjectsFor(whole ? p : justHero(p)).some(s => !entry[s.key] || entry[s.key].q !== s.q);
+  }
+  const asked = new Set();
+  async function findLive(p, whole) {
+    const job = p.id + (whole ? "/page" : "/card");
+    if (asked.has(job) || !missing(p, whole)) return;
+    asked.add(job);
+    const fetchJson = url => fetch(url).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+    try {
+      const found = await PhotoRank.pickForPlace(whole ? p : justHero(p), live[p.id] || PHOTOS[p.id] || {}, fetchJson);
+      live[p.id] = Object.assign({}, live[p.id] || PHOTOS[p.id] || {}, found);
+      redraw(p);
+    } catch (e) {
+      // No internet. The flag shows instead.
+    }
+  }
 
   // ---------- Map (built the first time the tab opens) ----------
   const legendHtml = Object.values(LEGS).map(l => `<span><i style="background:${l.colour}"></i>${l.name}</span>`).join("");
@@ -150,6 +196,16 @@
       }
     });
 
+    // Each pin's popup shows a photo and links to the place pages for that stop.
+    const placesAt = {};
+    PLACES.forEach(p => (p.stops || []).forEach(id => (placesAt[id] = placesAt[id] || []).push(p)));
+    function popup(s) {
+      const here = placesAt[s.id] || PLACES.filter(p => p.name === s.name);
+      const ph = here.length && photosFor(here[0], "hero")[0];
+      return `${ph ? `<img class="pop-photo" src="${esc(PhotoRank.sized(ph, 330))}" alt="">` : ""}
+        <b>${s.flag} ${s.name}, ${s.country}</b><br>${fmt(s.start)}${s.end !== s.start ? " to " + fmt(s.end) : ""}${s.note ? "<br>" + s.note : ""}
+        ${here.map(p => `<br><a href="#places/${p.id}">See ${p.name} →</a>`).join("")}`;
+    }
     let n = 0;
     STOPS.forEach(s => {
       if (s.hidePin) return;
@@ -160,7 +216,7 @@
         iconSize: [26, 26], iconAnchor: [13, 13]
       });
       L.marker([s.lat, s.lng], { icon, title: s.name })
-        .bindPopup(`<b>${s.flag} ${s.name}, ${s.country}</b><br>${fmt(s.start)}${s.end !== s.start ? " to " + fmt(s.end) : ""}${s.note ? "<br>" + s.note : ""}`)
+        .bindPopup(() => popup(s), { minWidth: 220, maxWidth: 260 })
         .addTo(map);
     });
 
@@ -328,53 +384,33 @@
 
   // ---------- Places ----------
   const placeById = Object.fromEntries(PLACES.map(p => [p.id, p]));
-  const tagFor = p => p.onRoute
+  const legTag = p => p.onRoute
     ? `<span class="tag" style="background:${LEGS[p.leg].colour}">${LEGS[p.leg].name}</span>`
     : `<span class="tag maybe">Maybe</span>`;
+  // When I'm there, like ["9 Apr to 11 Apr", "20 Apr to 21 Apr"]
+  const datesFor = p => [...new Set((p.stops || []).map(id => byId[id])
+    .map(s => (s.start === s.end ? fmt(s.start) : `${fmt(s.start)} to ${fmt(s.end)}`)))];
 
+  let placeFilter = "route";
   function renderPlaces(filter) {
+    placeFilter = filter;
     const list = PLACES.filter(p => filter === "all" || (filter === "route") === p.onRoute);
-    $("#place-cards").innerHTML = list.map(p => `
+    $("#place-cards").innerHTML = list.map(p => {
+      const hero = photosFor(p, "hero")[0];
+      const dates = datesFor(p);
+      return `
       <a class="card" href="#places/${p.id}">
-        <div class="photo" data-wiki="${p.wiki}" ${p.img ? `style="background-image:url('${p.img}')"` : ""}>${p.flag}</div>
+        <div class="card-photo">${hero ? img(hero, [500, 960], "(max-width: 700px) 100vw, 350px") : `<span>${p.flag}</span>`}</div>
         <div class="body">
-          ${tagFor(p)}
+          ${legTag(p)}
           <h3>${p.name}</h3>
-          <div class="country">${p.flag} ${p.country}</div>
-          <ul>${p.todo.slice(0, 3).map(t => `<li>${t}</li>`).join("")}</ul>
+          <div class="country">${p.flag} ${p.country}${dates.length ? ` · ${dates.join(" and ")}` : ""}</div>
+          <p class="blurb">${p.blurb}</p>
           <div class="more">See more →</div>
         </div>
-      </a>`).join("");
-    applyPhotos();
-  }
-
-  // Ask Wikipedia for one photo per place, all in one request.
-  const photos = {};
-  function applyPhotos() {
-    document.querySelectorAll(".photo[data-wiki]").forEach(el => {
-      const url = photos[el.dataset.wiki];
-      if (url && !el.style.backgroundImage) {
-        el.style.backgroundImage = `url("${url}")`;
-        el.classList.add("loaded");
-      }
-    });
-  }
-  async function loadPhotos() {
-    const titles = PLACES.filter(p => !p.img).map(p => p.wiki);
-    const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1" +
-      "&prop=pageimages&piprop=thumbnail&pithumbsize=1200&titles=" + encodeURIComponent(titles.join("|"));
-    try {
-      const data = await (await fetch(url)).json();
-      const back = {};
-      (data.query.normalized || []).forEach(x => { back[x.to] = x.from; });
-      (data.query.redirects || []).forEach(x => { back[x.to] = back[x.from] || x.from; });
-      Object.values(data.query.pages).forEach(pg => {
-        if (pg.thumbnail) photos[back[pg.title] || pg.title] = pg.thumbnail.source;
-      });
-      applyPhotos();
-    } catch (e) {
-      // No internet. The cards keep their flag instead of a photo.
-    }
+      </a>`;
+    }).join("");
+    list.forEach(p => findLive(p, false));
   }
 
   document.querySelectorAll("[data-filter]").forEach(btn => btn.addEventListener("click", () => {
@@ -382,17 +418,11 @@
     renderPlaces(btn.dataset.filter);
   }));
   renderPlaces("route");
-  loadPhotos();
 
   // ---------- Place page (#places/<id>) ----------
-  const wikiCache = {};
-  async function wikiFetch(url) {
-    if (!wikiCache[url]) wikiCache[url] = fetch(url).then(r => r.json());
-    return wikiCache[url];
-  }
-  const skipImage = /flag|map|logo|icon|coat.of.arms|seal|locator|emblem|signature|blason|wappen|location/i;
+  let placeMap, placePin, openId;
+  let pagePhotos = []; // every photo on the open page, in order, for the photo viewer
 
-  let placeMap, placePin;
   onShow.places = id => {
     const p = placeById[id];
     $("#place-list").hidden = !!p;
@@ -400,45 +430,104 @@
     if (p) openPlace(p);
   };
 
+  // Live photos arrived. Draw whatever is showing again.
+  function redraw(p) {
+    if (!$("#tab-places").hidden && !$("#place-list").hidden) renderPlaces(placeFilter);
+    if (!$("#tab-places").hidden && openId === p.id && !$("#place-page").hidden) openPlace(p);
+  }
+
   function openPlace(p) {
+    openId = p.id;
     const i = PLACES.indexOf(p);
     const prev = PLACES[(i - 1 + PLACES.length) % PLACES.length];
     const next = PLACES[(i + 1) % PLACES.length];
-    const dates = (p.stops || []).map(id => byId[id]).map(s => `${fmt(s.start)} to ${fmt(s.end)}`);
-    const list = (title, items) => items && items.length
-      ? `<h3>${title}</h3><ul class="todo">${items.map(t => `<li>${t}</li>`).join("")}</ul>` : "";
+    const dates = datesFor(p);
+    const facts = COUNTRIES[p.country];
+
+    // Every photo is a button that opens the photo viewer. Built in page order.
+    pagePhotos = [];
+    const photo = (ph, widths, sizes, cls) => {
+      pagePhotos.push(ph);
+      return `<button class="photo-btn ${cls}" data-photo="${pagePhotos.length - 1}" title="${esc(ph.caption)}">${img(ph, widths, sizes)}</button>`;
+    };
+    const card = (item, key, tags) => {
+      const ph = photosFor(p, key)[0];
+      return `
+        <article class="thing">
+          ${ph ? photo(ph, [500, 960], "(max-width: 700px) 100vw, 360px", "thing-photo") : `<div class="thing-photo no-photo">${p.flag}</div>`}
+          <div class="thing-body">
+            <h4>${item.name}</h4>
+            <p>${item.what}</p>
+            ${tags && tags.length ? `<div class="thing-tags">${tags.map(t => `<span>${TAGS[t] || t}</span>`).join("")}</div>` : ""}
+          </div>
+        </article>`;
+    };
+
+    const hero = photosFor(p, "hero")[0];
+    const heroHtml = hero ? photo(hero, [960, 1280, 1920], "(max-width: 1100px) 100vw, 1070px", "hero-photo") : `<div class="hero-photo no-photo">${p.flag}</div>`;
+    const things = (p.highlights || []).map(h => card(h, "do:" + h.name, h.tags)).join("");
+    const food = (p.food || []).map(f => card(f, "eat:" + f.name)).join("");
+    const gallery = photosFor(p, "gallery").map((ph, n) =>
+      photo(ph, n ? [500, 960] : [960, 1280], n ? "(max-width: 700px) 50vw, 270px" : "(max-width: 700px) 100vw, 540px", "")).join("");
+    const credits = pagePhotos.map((ph, n) => `
+      <li><button class="link" data-photo="${n}">${esc(ph.caption)}</button>
+        <span class="muted">by ${esc(ph.by)}${ph.license ? `, ${esc(ph.license)}` : ""}.</span>
+        <a href="${esc(ph.page)}" target="_blank" rel="noopener">Source</a></li>`).join("");
+
     const wikiPage = "https://en.wikipedia.org/wiki/" + encodeURIComponent(p.article.replace(/ /g, "_"));
+    const mapsLink = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(p.name + ", " + p.country);
+    const navLinks = `
+      <a class="chip" href="#places/${prev.id}">← ${prev.name}</a>
+      <a class="chip" href="#places/${next.id}">${next.name} →</a>`;
 
     $("#place-page").innerHTML = `
-      <a class="back" href="#places">← All places</a>
-      <div class="place-hero photo" data-wiki="${p.wiki}" ${p.img ? `style="background-image:url('${p.img}')"` : ""}>${p.flag}</div>
-      <div class="place-head">
-        ${tagFor(p)}
-        <h2>${p.name}</h2>
-        <div class="country">${p.flag} ${p.country}</div>
-        ${dates.length ? `<p class="when-there">📅 I'm there ${[...new Set(dates)].join(" and ")}</p>` : `<p class="when-there muted">Not in the plan yet. Just an idea.</p>`}
+      <div class="place-top">
+        <a class="back" href="#places">← All places</a>
+        <div class="place-nav">${navLinks}</div>
       </div>
-      <div class="place-grid">
-        <div>
-          <h3>About</h3>
-          <p id="place-about" class="muted">Loading from Wikipedia…</p>
-          <p class="small"><a href="${wikiPage}" target="_blank" rel="noopener">Read more on Wikipedia</a></p>
-          ${list("Things to do", p.todo)}
-          ${list("Food and sweets", p.food)}
-          ${p.tip ? `<div class="tip">💡 ${p.tip}</div>` : ""}
+      <header class="place-hero">
+        ${heroHtml}
+        <div class="hero-text">
+          ${legTag(p)}
+          <h2>${p.name}</h2>
+          <p>${p.flag} ${p.country} · ${dates.length ? `📅 ${dates.join(" and ")}` : "Not in the plan yet"}</p>
         </div>
-        <aside>
-          <div id="place-map" class="place-map"></div>
-          <p class="small"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + p.country)}" target="_blank" rel="noopener">Open in Google Maps</a></p>
-        </aside>
+        ${hero ? `<button class="hero-credit" data-photo="0">📷 ${esc(hero.by)}</button>` : ""}
+      </header>
+
+      <p class="lead place-blurb">${p.blurb}</p>
+      ${facts ? `
+      <div class="facts">
+        <div><span>🗣️ Language</span><b>${facts.language}</b></div>
+        <div><span>👋 Say hello</span><b>${facts.hello}</b></div>
+        <div><span>💶 Money</span><b>${facts.money}</b></div>
+        <div><span>🔌 Plugs</span><b>${facts.plug}</b></div>
+      </div>` : ""}
+
+      ${things ? `<h3 class="section-title">Things to do</h3><div class="things">${things}</div>` : ""}
+      ${food ? `<h3 class="section-title">Food to try</h3><div class="things food">${food}</div>` : ""}
+      ${p.tip ? `<div class="tip">💡 ${p.tip}</div>` : ""}
+
+      ${gallery ? `<h3 class="section-title">More photos</h3><div class="gallery">${gallery}</div>` : ""}
+
+      <h3 class="section-title">Where it is</h3>
+      <div class="where">
+        <div id="place-map" class="place-map"></div>
+        <div class="where-links">
+          <a class="chip" href="${mapsLink}" target="_blank" rel="noopener">📍 Open in Google Maps</a>
+          <a class="chip" href="${wikiPage}" target="_blank" rel="noopener">📖 Read more on Wikipedia</a>
+          <a class="chip" href="choose-photos.html#${p.id}">🖼️ Swap photos</a>
+        </div>
       </div>
-      <h3>Photos</h3>
-      <div class="gallery" id="place-gallery"><p class="muted">Loading photos…</p></div>
-      <div class="place-nav">
-        <a class="chip" href="#places/${prev.id}">← ${prev.name}</a>
-        <a class="chip" href="#places/${next.id}">${next.name} →</a>
-      </div>`;
-    applyPhotos();
+
+      ${credits ? `
+      <details class="credits">
+        <summary>Photo credits</summary>
+        <ol>${credits}</ol>
+        <p class="small muted">All photos are from Wikimedia Commons. Tap any photo to see it big.</p>
+      </details>` : ""}
+
+      <div class="place-nav bottom">${navLinks}</div>`;
 
     // Mini map. Built once, then moved to each place.
     if (!placeMap) {
@@ -458,40 +547,68 @@
       icon: L.divIcon({ className: "", html: `<div class="pin" style="background:${p.onRoute ? LEGS[p.leg].colour : "#6b7280"}">${p.flag}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] })
     }).addTo(placeMap);
 
-    loadAbout(p);
-    loadGallery(p);
+    findLive(p, true);
   }
 
-  async function loadAbout(p) {
-    const el = $("#place-about");
-    try {
-      const data = await wikiFetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(p.article.replace(/ /g, "_")));
-      if ($("#place-about") === el) {
-        el.textContent = data.extract;
-        el.classList.remove("muted");
-      }
-    } catch (e) {
-      el.textContent = "Needs the internet to load.";
-    }
-  }
+  // Tap a photo to see it big.
+  $("#place-page").addEventListener("click", e => {
+    const b = e.target.closest("[data-photo]");
+    if (b) openViewer(+b.dataset.photo, b);
+  });
 
-  async function loadGallery(p) {
-    const el = $("#place-gallery");
-    const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1" +
-      "&generator=images&gimlimit=60&prop=imageinfo&iiprop=url|mime&iiurlwidth=640&titles=" + encodeURIComponent(p.article);
-    try {
-      const data = await wikiFetch(url);
-      const pics = Object.values((data.query && data.query.pages) || {})
-        .filter(pg => pg.imageinfo && pg.imageinfo[0].mime === "image/jpeg" && !skipImage.test(pg.title))
-        .slice(0, 12);
-      if ($("#place-gallery") !== el) return;
-      el.innerHTML = pics.length
-        ? pics.map(pg => `<a href="${pg.imageinfo[0].descriptionurl}" target="_blank" rel="noopener" style="background-image:url('${pg.imageinfo[0].thumburl}')" title="${pg.title.replace(/^File:/, "").replace(/\.jpe?g$/i, "").replace(/"/g, "")}"></a>`).join("")
-        : `<p class="muted">No photos found.</p>`;
-    } catch (e) {
-      el.innerHTML = `<p class="muted">Photos need the internet to load.</p>`;
-    }
+  // ---------- Photo viewer ----------
+  const viewer = $("#viewer");
+  let viewAt = 0, viewFrom = null, touchX = null;
+  // Big enough for this screen, and the same size every time so the next photo can load early.
+  const bigUrl = ph => PhotoRank.sized(ph, Math.min(1920, window.innerWidth * (window.devicePixelRatio || 1)));
+
+  function showPhoto(n) {
+    viewAt = (n + pagePhotos.length) % pagePhotos.length;
+    const ph = pagePhotos[viewAt];
+    const pic = $("#viewer-img");
+    pic.src = bigUrl(ph);
+    pic.alt = ph.caption;
+    $("#viewer-caption").innerHTML = `
+      <b>${esc(ph.caption)}</b>
+      <span>Photo by ${esc(ph.by)}${ph.license ? ` · ${esc(ph.license)}` : ""} ·
+        <a href="${esc(ph.page)}" target="_blank" rel="noopener">See it on Wikimedia Commons</a></span>
+      <span class="muted">${viewAt + 1} of ${pagePhotos.length}</span>`;
+    new Image().src = bigUrl(pagePhotos[(viewAt + 1) % pagePhotos.length]);
   }
+  function openViewer(n, from) {
+    if (!pagePhotos.length) return;
+    viewFrom = from || null;
+    viewer.hidden = false;
+    document.body.classList.add("no-scroll");
+    showPhoto(n);
+    $("#viewer .viewer-close").focus();
+  }
+  function closeViewer() {
+    if (viewer.hidden) return;
+    viewer.hidden = true;
+    document.body.classList.remove("no-scroll");
+    $("#viewer-img").removeAttribute("src");
+    if (viewFrom && document.contains(viewFrom)) viewFrom.focus({ preventScroll: true });
+  }
+  viewer.addEventListener("click", e => {
+    if (e.target.closest(".viewer-prev")) showPhoto(viewAt - 1);
+    else if (e.target.closest(".viewer-next")) showPhoto(viewAt + 1);
+    else if (!e.target.closest("img, a, figcaption")) closeViewer();
+  });
+  document.addEventListener("keydown", e => {
+    if (viewer.hidden) return;
+    if (e.key === "Escape") closeViewer();
+    else if (e.key === "ArrowLeft") showPhoto(viewAt - 1);
+    else if (e.key === "ArrowRight") showPhoto(viewAt + 1);
+  });
+  // Swipe left or right on a phone.
+  viewer.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, { passive: true });
+  viewer.addEventListener("touchend", e => {
+    if (touchX == null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) > 50) showPhoto(viewAt + (dx < 0 ? 1 : -1));
+  });
 
   // ---------- Checklist ----------
   const KEY = "trip-checklist";
