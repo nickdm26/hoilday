@@ -70,14 +70,17 @@
     </section>
 
     <section id="tab-places" class="panel wrap">
-      <h2>Places</h2>
-      <div class="map-tools" id="place-filter">
-        <button class="chip is-on" data-filter="route">On my route</button>
-        <button class="chip" data-filter="maybe">Maybe ideas</button>
-        <button class="chip" data-filter="all">All</button>
+      <div id="place-list">
+        <h2>Places</h2>
+        <div class="map-tools" id="place-filter">
+          <button class="chip is-on" data-filter="route">On my route</button>
+          <button class="chip" data-filter="maybe">Maybe ideas</button>
+          <button class="chip" data-filter="all">All</button>
+        </div>
+        <div class="cards" id="place-cards"></div>
+        <p class="small muted">Tap a place for more. Photos come from Wikipedia and need the internet to load.</p>
       </div>
-      <div class="cards" id="place-cards"></div>
-      <p class="small muted">Photos come from Wikipedia and need the internet to load.</p>
+      <div id="place-page" hidden></div>
     </section>
 
     <section id="tab-checklist" class="panel wrap">

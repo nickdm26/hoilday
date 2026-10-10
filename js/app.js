@@ -16,12 +16,14 @@
   // ---------- Tabs ----------
   const TABS = ["overview", "map", "flights", "calendar", "places", "checklist"];
   const onShow = {};
+  // The hash picks the tab. Anything after a slash is passed on, e.g. #places/venice
   function showTab() {
-    const name = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview";
+    const [tab, sub] = location.hash.slice(1).split("/");
+    const name = TABS.includes(tab) ? tab : "overview";
     TABS.forEach(t => { $("#tab-" + t).hidden = t !== name; });
     document.querySelectorAll("[data-tab]").forEach(a => a.classList.toggle("is-on", a.dataset.tab === name));
     window.scrollTo(0, 0);
-    if (onShow[name]) onShow[name]();
+    if (onShow[name]) onShow[name](sub);
   }
   window.addEventListener("hashchange", showTab);
 
@@ -72,6 +74,24 @@
   $("#legend").innerHTML = legendHtml +
     `<span><i class="line dash"></i>Flight</span><span><i class="line"></i>Coach, train or car</span>`;
 
+  // Offline country shapes. Countries on the trip are filled in.
+  let worldShapes;
+  function simpleBase() {
+    worldShapes = worldShapes || topojson.feature(WORLD, WORLD.objects.countries);
+    const css = getComputedStyle(document.documentElement);
+    const visited = new Set(["380", "826", "528", "276", "756", "250", "056", "702", "554", "344"]);
+    return L.geoJSON(worldShapes, {
+      pane: "base",
+      style: f => ({
+        color: css.getPropertyValue("--border-country").trim(),
+        weight: 0.8,
+        fillColor: css.getPropertyValue(visited.has(f.id) ? "--land-visit" : "--land").trim(),
+        fillOpacity: 1
+      }),
+      interactive: false
+    });
+  }
+
   let map;
   onShow.map = () => {
     if (map) { map.invalidateSize(); return; }
@@ -85,20 +105,9 @@
 
     // The base map sits in its own layer under the route, so switching never covers the lines.
     map.createPane("base").style.zIndex = 250;
-    const css = getComputedStyle(document.documentElement);
-    const visited = new Set(["380", "826", "528", "276", "756", "250", "056", "702", "554", "344"]);
     // Three looks for the map. Simple is offline country shapes. The others are online map tiles.
     const looks = {
-      simple: L.geoJSON(topojson.feature(WORLD, WORLD.objects.countries), {
-        pane: "base",
-        style: f => ({
-          color: css.getPropertyValue("--border-country").trim(),
-          weight: 0.8,
-          fillColor: css.getPropertyValue(visited.has(f.id) ? "--land-visit" : "--land").trim(),
-          fillOpacity: 1
-        }),
-        interactive: false
-      }),
+      simple: simpleBase(),
       streets: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
         subdomains: "abcd", maxZoom: 19,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -318,23 +327,24 @@
   showCal(savedView);
 
   // ---------- Places ----------
+  const placeById = Object.fromEntries(PLACES.map(p => [p.id, p]));
+  const tagFor = p => p.onRoute
+    ? `<span class="tag" style="background:${LEGS[p.leg].colour}">${LEGS[p.leg].name}</span>`
+    : `<span class="tag maybe">Maybe</span>`;
+
   function renderPlaces(filter) {
     const list = PLACES.filter(p => filter === "all" || (filter === "route") === p.onRoute);
-    $("#place-cards").innerHTML = list.map(p => {
-      const tag = p.onRoute
-        ? `<span class="tag" style="background:${LEGS[p.leg].colour}">${LEGS[p.leg].name}</span>`
-        : `<span class="tag maybe">Maybe</span>`;
-      return `
-      <article class="card">
+    $("#place-cards").innerHTML = list.map(p => `
+      <a class="card" href="#places/${p.id}">
         <div class="photo" data-wiki="${p.wiki}" ${p.img ? `style="background-image:url('${p.img}')"` : ""}>${p.flag}</div>
         <div class="body">
-          ${tag}
+          ${tagFor(p)}
           <h3>${p.name}</h3>
           <div class="country">${p.flag} ${p.country}</div>
-          <ul>${p.todo.map(t => `<li>${t}</li>`).join("")}</ul>
+          <ul>${p.todo.slice(0, 3).map(t => `<li>${t}</li>`).join("")}</ul>
+          <div class="more">See more →</div>
         </div>
-      </article>`;
-    }).join("");
+      </a>`).join("");
     applyPhotos();
   }
 
@@ -352,7 +362,7 @@
   async function loadPhotos() {
     const titles = PLACES.filter(p => !p.img).map(p => p.wiki);
     const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1" +
-      "&prop=pageimages&piprop=thumbnail&pithumbsize=800&titles=" + encodeURIComponent(titles.join("|"));
+      "&prop=pageimages&piprop=thumbnail&pithumbsize=1200&titles=" + encodeURIComponent(titles.join("|"));
     try {
       const data = await (await fetch(url)).json();
       const back = {};
@@ -373,6 +383,115 @@
   }));
   renderPlaces("route");
   loadPhotos();
+
+  // ---------- Place page (#places/<id>) ----------
+  const wikiCache = {};
+  async function wikiFetch(url) {
+    if (!wikiCache[url]) wikiCache[url] = fetch(url).then(r => r.json());
+    return wikiCache[url];
+  }
+  const skipImage = /flag|map|logo|icon|coat.of.arms|seal|locator|emblem|signature|blason|wappen|location/i;
+
+  let placeMap, placePin;
+  onShow.places = id => {
+    const p = placeById[id];
+    $("#place-list").hidden = !!p;
+    $("#place-page").hidden = !p;
+    if (p) openPlace(p);
+  };
+
+  function openPlace(p) {
+    const i = PLACES.indexOf(p);
+    const prev = PLACES[(i - 1 + PLACES.length) % PLACES.length];
+    const next = PLACES[(i + 1) % PLACES.length];
+    const dates = (p.stops || []).map(id => byId[id]).map(s => `${fmt(s.start)} to ${fmt(s.end)}`);
+    const list = (title, items) => items && items.length
+      ? `<h3>${title}</h3><ul class="todo">${items.map(t => `<li>${t}</li>`).join("")}</ul>` : "";
+    const wikiPage = "https://en.wikipedia.org/wiki/" + encodeURIComponent(p.article.replace(/ /g, "_"));
+
+    $("#place-page").innerHTML = `
+      <a class="back" href="#places">← All places</a>
+      <div class="place-hero photo" data-wiki="${p.wiki}" ${p.img ? `style="background-image:url('${p.img}')"` : ""}>${p.flag}</div>
+      <div class="place-head">
+        ${tagFor(p)}
+        <h2>${p.name}</h2>
+        <div class="country">${p.flag} ${p.country}</div>
+        ${dates.length ? `<p class="when-there">📅 I'm there ${[...new Set(dates)].join(" and ")}</p>` : `<p class="when-there muted">Not in the plan yet. Just an idea.</p>`}
+      </div>
+      <div class="place-grid">
+        <div>
+          <h3>About</h3>
+          <p id="place-about" class="muted">Loading from Wikipedia…</p>
+          <p class="small"><a href="${wikiPage}" target="_blank" rel="noopener">Read more on Wikipedia</a></p>
+          ${list("Things to do", p.todo)}
+          ${list("Food and sweets", p.food)}
+          ${p.tip ? `<div class="tip">💡 ${p.tip}</div>` : ""}
+        </div>
+        <aside>
+          <div id="place-map" class="place-map"></div>
+          <p class="small"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ", " + p.country)}" target="_blank" rel="noopener">Open in Google Maps</a></p>
+        </aside>
+      </div>
+      <h3>Photos</h3>
+      <div class="gallery" id="place-gallery"><p class="muted">Loading photos…</p></div>
+      <div class="place-nav">
+        <a class="chip" href="#places/${prev.id}">← ${prev.name}</a>
+        <a class="chip" href="#places/${next.id}">${next.name} →</a>
+      </div>`;
+    applyPhotos();
+
+    // Mini map. Built once, then moved to each place.
+    if (!placeMap) {
+      placeMap = L.map("place-map", { zoomSnap: 0.25, maxZoom: 18, attributionControl: false });
+      placeMap.createPane("base").style.zIndex = 250;
+      placeMap.setView([p.lat, p.lng], 6);
+      simpleBase().addTo(placeMap);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxZoom: 19 }).addTo(placeMap);
+    } else {
+      // The page was redrawn, so move the map into the new spot.
+      $("#place-map").replaceWith(placeMap.getContainer());
+      placeMap.invalidateSize();
+      placeMap.setView([p.lat, p.lng], 6);
+    }
+    if (placePin) placePin.remove();
+    placePin = L.marker([p.lat, p.lng], {
+      icon: L.divIcon({ className: "", html: `<div class="pin" style="background:${p.onRoute ? LEGS[p.leg].colour : "#6b7280"}">${p.flag}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] })
+    }).addTo(placeMap);
+
+    loadAbout(p);
+    loadGallery(p);
+  }
+
+  async function loadAbout(p) {
+    const el = $("#place-about");
+    try {
+      const data = await wikiFetch("https://en.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(p.article.replace(/ /g, "_")));
+      if ($("#place-about") === el) {
+        el.textContent = data.extract;
+        el.classList.remove("muted");
+      }
+    } catch (e) {
+      el.textContent = "Needs the internet to load.";
+    }
+  }
+
+  async function loadGallery(p) {
+    const el = $("#place-gallery");
+    const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1" +
+      "&generator=images&gimlimit=60&prop=imageinfo&iiprop=url|mime&iiurlwidth=640&titles=" + encodeURIComponent(p.article);
+    try {
+      const data = await wikiFetch(url);
+      const pics = Object.values((data.query && data.query.pages) || {})
+        .filter(pg => pg.imageinfo && pg.imageinfo[0].mime === "image/jpeg" && !skipImage.test(pg.title))
+        .slice(0, 12);
+      if ($("#place-gallery") !== el) return;
+      el.innerHTML = pics.length
+        ? pics.map(pg => `<a href="${pg.imageinfo[0].descriptionurl}" target="_blank" rel="noopener" style="background-image:url('${pg.imageinfo[0].thumburl}')" title="${pg.title.replace(/^File:/, "").replace(/\.jpe?g$/i, "").replace(/"/g, "")}"></a>`).join("")
+        : `<p class="muted">No photos found.</p>`;
+    } catch (e) {
+      el.innerHTML = `<p class="muted">Photos need the internet to load.</p>`;
+    }
+  }
 
   // ---------- Checklist ----------
   const KEY = "trip-checklist";

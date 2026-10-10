@@ -67,56 +67,139 @@ window.FLIGHTS = [
   { from: "HKG", fromCity: "Hong Kong", to: "AKL", toCity: "Auckland",  date: "Sat 1 May", day: "2027-05-01",  hours: 11,   leg: "home" }
 ];
 
-// Place cards. "wiki" is the Wikipedia page used for the photo.
-// Put your own photo link in "img" to override it.
+// Places. Tap a card on the site to open its own page.
+//   wiki:    Wikipedia page used for the card photo
+//   article: Wikipedia page used for the intro text and extra photos
+//   stops:   which STOPS ids above give my dates there
+//   img:     put your own photo link here to override the card photo
 window.PLACES = [
-  { name: "Singapore", country: "Singapore", flag: "🇸🇬", wiki: "Marina Bay Sands", onRoute: true, leg: "wedding",
-    todo: ["The wedding!", "Hawker centre food", "Gardens by the Bay light show"] },
-  { name: "Cervinia", country: "Italy", flag: "🇮🇹", wiki: "Breuil-Cervinia", onRoute: true, leg: "snow",
-    todo: ["Very high, snow into May", "Nursery slopes for beginners", "Matterhorn views"] },
-  { name: "Livigno", country: "Italy", flag: "🇮🇹", wiki: "Livigno", onRoute: true, leg: "snow",
-    todo: ["Tax free, cheap food and drink", "Open to early May", "Backup snow pick"] },
-  { name: "London", country: "England", flag: "🇬🇧", wiki: "Tower Bridge", onRoute: true, leg: "contiki",
-    todo: ["Huge free museums", "Theatre night", "Contiki starts here"] },
-  { name: "Amsterdam", country: "Netherlands", flag: "🇳🇱", wiki: "Amsterdam", onRoute: true, leg: "contiki",
-    todo: ["Canals and bikes", "Stroopwafels", "Nightlife"] },
-  { name: "Rhine Valley", country: "Germany", flag: "🇩🇪", wiki: "Middle Rhine", onRoute: true, leg: "contiki",
-    todo: ["Castles on the river", "Wine villages"] },
-  { name: "Munich", country: "Germany", flag: "🇩🇪", wiki: "Munich", onRoute: true, leg: "contiki",
-    todo: ["Beer halls and Hofbräuhaus", "Spring beer festival", "Therme Erding spa"] },
-  { name: "Venice", country: "Italy", flag: "🇮🇹", wiki: "Venice", onRoute: true, leg: "contiki",
-    todo: ["Cicchetti bar crawl", "Murano and Burano islands", "St Mark's Square"] },
-  { name: "Lucerne", country: "Switzerland", flag: "🇨🇭", wiki: "Lucerne", onRoute: true, leg: "contiki",
-    todo: ["Chapel Bridge", "Cable car up Mount Pilatus", "Swiss chocolate"] },
-  { name: "Paris", country: "France", flag: "🇫🇷", wiki: "Eiffel Tower", onRoute: true, leg: "contiki",
-    todo: ["The Louvre", "Pastries and macarons", "Disneyland Paris coasters"] },
-  { name: "Bruges", country: "Belgium", flag: "🇧🇪", wiki: "Bruges", onRoute: true, leg: "solo",
-    todo: ["Chocolate shops", "Waffles", "Fairy tale old town"] },
-  { name: "Rome", country: "Italy", flag: "🇮🇹", wiki: "Colosseum", onRoute: true, leg: "solo",
-    todo: ["Colosseum and Forum", "Vatican Museums", "Trastevere food at night"] },
-  { name: "Florence", country: "Italy", flag: "🇮🇹", wiki: "Florence Cathedral", onRoute: true, leg: "solo",
-    todo: ["Uffizi Gallery", "Statue of David", "Climb the Duomo"] },
-  { name: "Lake Garda", country: "Italy", flag: "🇮🇹", wiki: "Lake Garda", onRoute: true, leg: "solo",
-    todo: ["Gardaland roller coasters", "Mountain biking at Riva", "Sirmione thermal spa"] },
-  { name: "Hong Kong", country: "Hong Kong", flag: "🇭🇰", wiki: "Victoria Harbour", onRoute: true, leg: "home",
-    todo: ["Ocean Park or Disneyland", "Dim sum", "Rest before the last flight"] },
+  { id: "singapore", name: "Singapore", country: "Singapore", flag: "🇸🇬", wiki: "Marina Bay Sands", article: "Singapore",
+    lat: 1.29, lng: 103.85, onRoute: true, leg: "wedding", stops: ["sin"],
+    todo: ["The wedding!", "Gardens by the Bay light show", "Marina Bay Sands rooftop", "Sentosa and Universal Studios", "Night Safari"],
+    food: ["Hawker centres: Lau Pa Sat, Maxwell, Newton", "Chilli crab", "Hainanese chicken rice", "Kaya toast for breakfast"],
+    tip: "Fill in the Singapore Arrival Card online within 3 days of landing." },
 
-  { name: "Interlaken", country: "Switzerland", flag: "🇨🇭", wiki: "Lauterbrunnen", onRoute: false,
-    todo: ["Paragliding", "Lauterbrunnen waterfalls", "Jungfraujoch train"] },
-  { name: "Milan", country: "Italy", flag: "🇮🇹", wiki: "Milan Cathedral", onRoute: false,
-    todo: ["Aperitivo buffet", "QC Termemilano spa", "Football at San Siro"] },
-  { name: "Amalfi Coast", country: "Italy", flag: "🇮🇹", wiki: "Positano", onRoute: false,
-    todo: ["Real Naples pizza", "Pompeii", "Path of the Gods"] },
-  { name: "Europa-Park", country: "Germany", flag: "🇩🇪", wiki: "Europa-Park", onRoute: false,
-    todo: ["Some of Europe's best coasters"] },
-  { name: "Berlin", country: "Germany", flag: "🇩🇪", wiki: "Brandenburg Gate", onRoute: false,
-    todo: ["Berlin Wall", "Museum Island", "Famous nightlife"] },
-  { name: "Budapest", country: "Hungary", flag: "🇭🇺", wiki: "Hungarian Parliament Building", onRoute: false,
-    todo: ["Thermal baths", "Ruin bars", "Chimney cake"] },
-  { name: "Barcelona", country: "Spain", flag: "🇪🇸", wiki: "Sagrada Família", onRoute: false,
-    todo: ["Beach, food and nightlife", "PortAventura theme park"] },
-  { name: "Amsterdam King's Day", country: "Netherlands", flag: "🇳🇱", wiki: "Koningsdag", onRoute: false,
-    todo: ["Tue 27 April 2027", "Orange street parties", "Clashes with Italy time"] }
+  { id: "cervinia", name: "Cervinia", country: "Italy", flag: "🇮🇹", wiki: "Breuil-Cervinia", article: "Breuil-Cervinia",
+    lat: 45.94, lng: 7.63, onRoute: true, leg: "snow", stops: ["cer"],
+    todo: ["Very high, so snow lasts into May", "Wide nursery slopes for beginners", "Matterhorn views from the slopes", "Ride across to Zermatt, Switzerland on a clear day"],
+    food: ["Polenta and fondue after riding", "Bombardino (hot eggnog and brandy)"],
+    tip: "The Open pass lets you ride days that are not in a row. Good for rest days." },
+
+  { id: "livigno", name: "Livigno", country: "Italy", flag: "🇮🇹", wiki: "Livigno", article: "Livigno",
+    lat: 46.54, lng: 10.14, onRoute: true, leg: "snow", stops: ["cer"],
+    todo: ["Big terrain park", "Long easy blue runs", "Aquagranda spa after riding"],
+    food: ["Tax free, so food and drink are cheap", "Pizzoccheri (buckwheat pasta)"],
+    tip: "Backup snow pick. Open to early May. The transfer from Milan is long." },
+
+  { id: "london", name: "London", country: "England", flag: "🇬🇧", wiki: "Tower Bridge", article: "London",
+    lat: 51.51, lng: -0.13, onRoute: true, leg: "contiki", stops: ["lon", "lon2"],
+    todo: ["Natural History Museum (free)", "British Museum (free)", "A West End show", "Camden Market", "Pub night in Soho"],
+    food: ["Borough Market", "Sunday roast", "Fish and chips"],
+    tip: "The Contiki starts and ends here. Book a bed the night before and after." },
+
+  { id: "amsterdam", name: "Amsterdam", country: "Netherlands", flag: "🇳🇱", wiki: "Amsterdam", article: "Amsterdam",
+    lat: 52.37, lng: 4.90, onRoute: true, leg: "contiki", stops: ["ams"],
+    todo: ["Canal boat ride", "Rijksmuseum or Van Gogh Museum", "Ride a bike like a local", "Nightlife around Leidseplein"],
+    food: ["Stroopwafels", "Dutch pancakes", "Fries with mayo"],
+    tip: "King's Day is Tue 27 April. It clashes with the Italy part of the plan." },
+
+  { id: "rhine", name: "Rhine Valley", country: "Germany", flag: "🇩🇪", wiki: "Middle Rhine", article: "Middle Rhine",
+    lat: 50.15, lng: 7.71, onRoute: true, leg: "contiki", stops: ["rhi"],
+    todo: ["Castles along the river", "Lorelei rock viewpoint", "Small wine villages"],
+    food: ["Riesling wine tasting", "German sausages and pretzels"] },
+
+  { id: "munich", name: "Munich", country: "Germany", flag: "🇩🇪", wiki: "Munich", article: "Munich",
+    lat: 48.14, lng: 11.58, onRoute: true, leg: "contiki", stops: ["mun"],
+    todo: ["Hofbräuhaus beer hall", "English Garden beer garden", "Spring beer festival (Frühlingsfest)", "Therme Erding spa and saunas", "Neuschwanstein Castle day trip"],
+    food: ["Pretzels and weisswurst", "Schnitzel", "Apple strudel"],
+    tip: "Ask your brother for his favourite spots." },
+
+  { id: "venice", name: "Venice", country: "Italy", flag: "🇮🇹", wiki: "Venice", article: "Venice",
+    lat: 45.44, lng: 12.33, onRoute: true, leg: "contiki", stops: ["ven"],
+    todo: ["Cicchetti bar crawl", "Murano and Burano by water bus", "St Mark's Square and Basilica", "Rialto Bridge at sunset", "Get lost in the back streets"],
+    food: ["Cicchetti (Venetian tapas)", "Spritz", "Tiramisu (it was invented nearby)"],
+    tip: "There may be a day visitor fee. It does not apply if you stay the night." },
+
+  { id: "lucerne", name: "Lucerne", country: "Switzerland", flag: "🇨🇭", wiki: "Lucerne", article: "Lucerne",
+    lat: 47.05, lng: 8.31, onRoute: true, leg: "contiki", stops: ["luc"],
+    todo: ["Chapel Bridge and old town", "Cable car up Mount Pilatus", "Rigi train, walk part way down", "Lake cruise"],
+    food: ["Swiss chocolate shops", "Fondue", "Rösti"],
+    tip: "Switzerland is pricey. Eat a big lunch and a cheap dinner." },
+
+  { id: "paris", name: "Paris", country: "France", flag: "🇫🇷", wiki: "Eiffel Tower", article: "Paris",
+    lat: 48.86, lng: 2.35, onRoute: true, leg: "contiki", stops: ["par"],
+    todo: ["The Louvre", "Eiffel Tower at night", "Montmartre", "Disneyland Paris coasters", "Seine river walk"],
+    food: ["Croissants and pastries", "Macarons", "Crêpes"],
+    tip: "Book Louvre tickets a day or two ahead." },
+
+  { id: "bruges", name: "Bruges and Brussels", country: "Belgium", flag: "🇧🇪", wiki: "Bruges", article: "Bruges",
+    lat: 51.21, lng: 3.22, onRoute: true, leg: "solo", stops: ["bel"],
+    todo: ["Fairy tale old town and canals", "Climb the Belfry", "Grand Place in Brussels", "Chocolate shop crawl"],
+    food: ["Belgian waffles", "Chocolate", "Fries", "Belgian beer"],
+    tip: "2 hours from London by Eurostar." },
+
+  { id: "rome", name: "Rome", country: "Italy", flag: "🇮🇹", wiki: "Colosseum", article: "Rome",
+    lat: 41.90, lng: 12.50, onRoute: true, leg: "solo", stops: ["rom"],
+    todo: ["Colosseum and Roman Forum", "Vatican Museums and Sistine Chapel", "Trevi Fountain and Pantheon", "Trastevere at night"],
+    food: ["Cacio e pepe and carbonara", "Pizza al taglio", "Gelato"],
+    tip: "Vatican tickets sell out. Book ahead." },
+
+  { id: "florence", name: "Florence", country: "Italy", flag: "🇮🇹", wiki: "Florence Cathedral", article: "Florence",
+    lat: 43.77, lng: 11.26, onRoute: true, leg: "solo", stops: ["flo"],
+    todo: ["Uffizi Gallery", "Statue of David", "Climb the Duomo", "Sunset at Piazzale Michelangelo"],
+    food: ["Mercato Centrale food hall", "Bistecca alla fiorentina", "Schiacciata sandwiches"],
+    tip: "Uffizi tickets sell out. Book ahead." },
+
+  { id: "garda", name: "Lake Garda", country: "Italy", flag: "🇮🇹", wiki: "Lake Garda", article: "Lake Garda",
+    lat: 45.45, lng: 10.71, onRoute: true, leg: "solo", stops: ["gar"],
+    todo: ["Gardaland roller coasters", "Mountain biking at Riva del Garda", "Aquaria thermal spa in Sirmione", "Boat between lake towns"],
+    food: ["Lake fish", "Aperol spritz by the water"],
+    tip: "Check Gardaland is open. Some parks only open around Easter." },
+
+  { id: "hongkong", name: "Hong Kong", country: "Hong Kong", flag: "🇭🇰", wiki: "Victoria Harbour", article: "Hong Kong",
+    lat: 22.30, lng: 114.17, onRoute: true, leg: "home", stops: ["hkg"],
+    todo: ["Ocean Park or Disneyland", "Victoria Peak tram", "Star Ferry across the harbour", "Symphony of Lights show"],
+    food: ["Dim sum", "Egg tarts", "Roast goose"],
+    tip: "A rest stop for my back before the last flight." },
+
+  { id: "interlaken", name: "Interlaken", country: "Switzerland", flag: "🇨🇭", wiki: "Lauterbrunnen", article: "Interlaken",
+    lat: 46.69, lng: 7.86, onRoute: false,
+    todo: ["Paragliding over the lakes", "Lauterbrunnen waterfalls walk", "Jungfraujoch train (about NZ$300+)"],
+    food: ["Swiss chocolate", "Raclette"] },
+
+  { id: "milan", name: "Milan", country: "Italy", flag: "🇮🇹", wiki: "Milan Cathedral", article: "Milan",
+    lat: 45.46, lng: 9.19, onRoute: false,
+    todo: ["Duomo rooftop", "QC Termemilano spa", "Football at San Siro", "Aperitivo buffet"],
+    food: ["Aperitivo (drink plus free buffet)", "Risotto alla milanese"] },
+
+  { id: "amalfi", name: "Amalfi Coast", country: "Italy", flag: "🇮🇹", wiki: "Positano", article: "Amalfi Coast",
+    lat: 40.63, lng: 14.60, onRoute: false,
+    todo: ["Path of the Gods walk", "Pompeii ruins", "Boat along the coast"],
+    food: ["Real Neapolitan pizza at L'Antica Pizzeria da Michele", "Limoncello"] },
+
+  { id: "europapark", name: "Europa-Park", country: "Germany", flag: "🇩🇪", wiki: "Europa-Park", article: "Europa-Park",
+    lat: 48.27, lng: 7.72, onRoute: false,
+    todo: ["Some of Europe's best roller coasters", "Rulantica water park next door"] },
+
+  { id: "berlin", name: "Berlin", country: "Germany", flag: "🇩🇪", wiki: "Brandenburg Gate", article: "Berlin",
+    lat: 52.52, lng: 13.40, onRoute: false,
+    todo: ["Berlin Wall and East Side Gallery", "Museum Island", "Famous nightlife"],
+    food: ["Currywurst", "Döner kebab"] },
+
+  { id: "budapest", name: "Budapest", country: "Hungary", flag: "🇭🇺", wiki: "Hungarian Parliament Building", article: "Budapest",
+    lat: 47.50, lng: 19.04, onRoute: false,
+    todo: ["Széchenyi thermal baths", "Ruin bars", "Danube at night"],
+    food: ["Chimney cake", "Goulash", "Lángos"] },
+
+  { id: "barcelona", name: "Barcelona", country: "Spain", flag: "🇪🇸", wiki: "Sagrada Família", article: "Barcelona",
+    lat: 41.39, lng: 2.17, onRoute: false,
+    todo: ["Sagrada Família", "Beach and nightlife", "PortAventura theme park"],
+    food: ["Tapas", "La Boqueria market"] },
+
+  { id: "kingsday", name: "Amsterdam King's Day", country: "Netherlands", flag: "🇳🇱", wiki: "Koningsdag", article: "Koningsdag",
+    lat: 52.37, lng: 4.90, onRoute: false,
+    todo: ["Tue 27 April 2027", "Orange street parties and canal boat parties", "Whole city becomes a street market"],
+    tip: "Clashes with the Italy part of the plan. Beds sell out early." }
 ];
 
 // Easy-to-forget checklist. Ticks are saved in your browser.
