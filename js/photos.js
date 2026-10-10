@@ -335,6 +335,7 @@ window.PHOTOS = {
   "paris": {
     "skip": ["File:Paris, Eiffelturm, Teleskop -- 2014 -- 1272.jpg","File:Sleeping Beauty Castle Disneyland Anaheim 2013.jpg","File:Farola.001 - Place de la Concorde (Paris).jpg","File:Hôtel des Invalides - 20150801 16h09 (10630).jpg"],
     "hero": { "q": "\"Eiffel Tower\" OR \"Tour Eiffel\" OR Eiffelturm", "photos": [
+      {"file":"File:Eiffel Tower and Pont Alexandre III at night.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/d/de/Eiffel_Tower_and_Pont_Alexandre_III_at_night.jpg","page":"https://commons.wikimedia.org/wiki/File:Eiffel_Tower_and_Pont_Alexandre_III_at_night.jpg","w":4288,"h":2748,"by":"Getfunky Paris","license":"CC BY 2.0","caption":"Eiffel Tower and Pont Alexandre III at night.","featured":true}
     ] },
     "do:The Louvre": { "q": "\"Louvre Pyramid\" OR \"Pyramide du Louvre\"", "photos": [
       {"file":"File:Louvre Courtyard, Looking West.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/a/a2/Louvre_Courtyard%2C_Looking_West.jpg","page":"https://commons.wikimedia.org/wiki/File:Louvre_Courtyard,_Looking_West.jpg","w":15359,"h":5730,"by":"Benh LIEU SONG ( Flickr )","license":"CC BY-SA 4.0","caption":"Looking west at the Louvre Museum's Napoleon Courtyard, at dusk.","featured":true,"quality":true}
@@ -348,8 +349,8 @@ window.PHOTOS = {
     "do:The Seine at night": { "q": "Seine night OR Seine nuit OR Seine dusk", "photos": [
       {"file":"File:Notre-Dame de Paris and Île de la Cité at dusk 140516 1.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/d/d0/Notre-Dame_de_Paris_and_%C3%8Ele_de_la_Cit%C3%A9_at_dusk_140516_1.jpg","page":"https://commons.wikimedia.org/wiki/File:Notre-Dame_de_Paris_and_%C3%8Ele_de_la_Cit%C3%A9_at_dusk_140516_1.jpg","w":8188,"h":4094,"by":"DXR","license":"CC BY-SA 3.0","caption":"NOTE: This image is a panorama consisting of 4 frames that were merged or stitched in Hugin 2013. As a result, this image necessarily under…","featured":true,"quality":true}
     ] },
-    "do:Disneyland Paris": { "q": "\"Disneyland Paris\" OR \"Sleeping Beauty Castle\" OR \"Château de la Belle au Bois Dormant\"", "photos": [
-      {"file":"File:Sleeping Beauty Castle 2019.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/2/2d/Sleeping_Beauty_Castle_2019.jpg","page":"https://commons.wikimedia.org/wiki/File:Sleeping_Beauty_Castle_2019.jpg","w":4032,"h":3024,"by":"CrispyCream27","license":"CC BY-SA 4.0","caption":"Sleeping Beauty Castle in 2019 after refurbishment"}
+    "do:Disneyland Paris": { "q": "\"Disneyland Paris\" OR \"Château de la Belle au Bois Dormant\"", "photos": [
+      {"file":"File:Disneyland Paryż 2013 (13).JPG","url":"https://upload.wikimedia.org/wikipedia/commons/5/59/Disneyland_Pary%C5%BC_2013_%2813%29.JPG","page":"https://commons.wikimedia.org/wiki/File:Disneyland_Pary%C5%BC_2013_(13).JPG","w":4000,"h":2672,"by":"Kapsuglan","license":"CC BY-SA 4.0","caption":"Disneyland Paryż 2013"}
     ] },
     "eat:Croissants and pastries": { "q": "croissant OR viennoiserie", "photos": [
       {"file":"File:Croissant, whole.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/3/3b/Croissant%2C_whole.jpg","page":"https://commons.wikimedia.org/wiki/File:Croissant,_whole.jpg","w":3269,"h":2452,"by":"SKopp","license":"CC BY-SA 3.0","caption":"A croissant, a crescent-shaped French pastry made from laminated, yeast-leavened dough. This particular specimen was made by a Hamburg bake…"}
@@ -776,6 +777,7 @@ window.PHOTOS = {
       {"file":"File:Carromato en Far West (PortAventura) . Tarragona-79.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/5/59/Carromato_en_Far_West_%28PortAventura%29_._Tarragona-79.jpg","page":"https://commons.wikimedia.org/wiki/File:Carromato_en_Far_West_(PortAventura)_._Tarragona-79.jpg","w":5057,"h":3561,"by":"Luis Miguel Bugallo Sánchez (Lmbuga)","license":"CC BY-SA 3.0","caption":"Carriage, \"Far West (Port Aventura)\", Tarragona, Catalonia.","quality":true}
     ] },
     "eat:Tapas": { "q": "tapas", "photos": [
+      {"file":"File:Tapas in Barcelona 02.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/8/8a/Tapas_in_Barcelona_02.jpg","page":"https://commons.wikimedia.org/wiki/File:Tapas_in_Barcelona_02.jpg","w":5472,"h":3648,"by":"Kritzolina","license":"CC BY-SA 4.0","caption":"Tunafish tartar with avocado and mango"}
     ] },
     "eat:Churros with chocolate": { "q": "churros chocolate", "photos": [
       {"file":"File:Churros con chocolate Mexico (32539051653).jpg","url":"https://upload.wikimedia.org/wikipedia/commons/b/b7/Churros_con_chocolate_Mexico_%2832539051653%29.jpg","page":"https://commons.wikimedia.org/wiki/File:Churros_con_chocolate_Mexico_(32539051653).jpg","w":5472,"h":3648,"by":"mike from New York, NY, US","license":"CC BY-SA 2.0","caption":"Churros con chocolate, en México."}
