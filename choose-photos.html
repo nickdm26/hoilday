@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Choose photos · Nick's Big Trip 2027</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-home" href="index.html#places">← Back to the trip</a>
+    <span class="muted small">Photo chooser</span>
+  </nav>
+
+  <main class="wrap panel chooser">
+    <h1>Choose photos</h1>
+    <p class="lead">Swap any photo you don't like. Your choices stay put, even when the picker runs again.</p>
+    <ol class="how">
+      <li>Pick a place.</li>
+      <li>Tap ✕ on a photo you don't like. It's never picked again, and the next best one takes its place.</li>
+      <li>Or tap <b>Show other photos</b> and tap the one you want.</li>
+      <li>Tap <b>Save photos.js</b> and save it over <code>js/photos.js</code>. Reload the trip site to see it.</li>
+      <li>Commit <code>js/photos.js</code> so the change is kept.</li>
+    </ol>
+
+    <label class="pick-place">Place
+      <select id="place"></select>
+    </label>
+    <p class="small muted" id="notice" hidden></p>
+    <div id="subjects"></div>
+  </main>
+
+  <div class="save-bar" id="save-bar" hidden>
+    <span id="save-text"></span>
+    <button class="chip is-on" id="save">Save photos.js</button>
+    <button class="chip" id="undo">Undo all</button>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/photo-rank.js"></script>
+  <script src="js/photos.js"></script>
+  <script src="js/choose.js"></script>
+</body>
+</html>

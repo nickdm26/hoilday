@@ -78,7 +78,7 @@
           <button class="chip" data-filter="all">All</button>
         </div>
         <div class="cards" id="place-cards"></div>
-        <p class="small muted">Tap a place for more. Photos come from Wikipedia and need the internet to load.</p>
+        <p class="small muted">Tap a place for more. Photos come from Wikimedia Commons and need the internet to load.</p>
       </div>
       <div id="place-page" hidden></div>
     </section>
@@ -91,13 +91,26 @@
   </main>
 
   <footer class="wrap footer small muted">
-    Map shapes from Natural Earth. Map made with Leaflet. Street maps from CARTO and OpenStreetMap. Satellite from Esri. Photos from Wikipedia.
+    Map shapes from Natural Earth. Map made with Leaflet. Street maps from CARTO and OpenStreetMap. Satellite from Esri.
+    Photos from Wikimedia Commons, credited on each place page.
   </footer>
+
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+    <button class="viewer-close" aria-label="Close">✕</button>
+    <button class="viewer-prev" aria-label="Previous photo">‹</button>
+    <figure>
+      <img id="viewer-img" alt="">
+      <figcaption id="viewer-caption"></figcaption>
+    </figure>
+    <button class="viewer-next" aria-label="Next photo">›</button>
+  </div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="vendor/topojson-client.min.js"></script>
   <script src="vendor/world-50m.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/photo-rank.js"></script>
+  <script src="js/photos.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
