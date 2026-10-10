@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nick's Big Trip 2027</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <a class="nav-home" href="#top">✈️ Big Trip 2027</a>
+    <div class="nav-links">
+      <a href="#map">Map</a>
+      <a href="#flights">Flights</a>
+      <a href="#timeline">Timeline</a>
+      <a href="#places">Places</a>
+      <a href="#checklist">Checklist</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="wrap">
+      <p class="eyebrow">Singapore wedding + Europe</p>
+      <h1>Nick's Big Trip 2027</h1>
+      <p class="lead">20 March to 1 May 2027. A wedding, some snow, a Contiki and a lot of food.</p>
+      <div class="stats" id="stats"></div>
+      <p class="small muted">This is the current plan. Nothing is booked yet.</p>
+    </div>
+  </header>
+
+  <main>
+    <section id="map" class="wrap">
+      <h2>The route</h2>
+      <div class="map-tools">
+        <button class="chip is-on" data-view="all">Whole trip</button>
+        <button class="chip" data-view="europe">Europe</button>
+      </div>
+      <div id="route-map" class="route-map" aria-label="Map of the trip route"></div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <section id="flights" class="wrap">
+      <h2>Flights</h2>
+      <p class="muted" id="flight-total"></p>
+      <div class="flights" id="flight-list"></div>
+    </section>
+
+    <section id="timeline" class="wrap">
+      <h2>Timeline</h2>
+      <div class="gantt" id="gantt"></div>
+      <ol class="stops" id="stop-list"></ol>
+    </section>
+
+    <section id="places" class="wrap">
+      <h2>Places</h2>
+      <div class="map-tools" id="place-filter">
+        <button class="chip is-on" data-filter="route">On my route</button>
+        <button class="chip" data-filter="maybe">Maybe ideas</button>
+        <button class="chip" data-filter="all">All</button>
+      </div>
+      <div class="cards" id="place-cards"></div>
+      <p class="small muted">Photos come from Wikipedia and need the internet to load.</p>
+    </section>
+
+    <section id="checklist" class="wrap">
+      <h2>Easy-to-forget checklist</h2>
+      <p class="muted"><span id="check-count"></span> Ticks are saved in this browser.</p>
+      <div class="checklist" id="check-groups"></div>
+    </section>
+  </main>
+
+  <footer class="wrap footer small muted">
+    Map shapes from Natural Earth. Map made with Leaflet. Photos from Wikipedia.
+  </footer>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="vendor/world-50m.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
