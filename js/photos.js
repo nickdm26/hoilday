@@ -333,9 +333,8 @@ window.PHOTOS = {
     ] }
   },
   "paris": {
-    "skip": ["File:Paris, Eiffelturm, Teleskop -- 2014 -- 1272.jpg","File:Sleeping Beauty Castle Disneyland Anaheim 2013.jpg","File:Farola.001 - Place de la Concorde (Paris).jpg"],
+    "skip": ["File:Paris, Eiffelturm, Teleskop -- 2014 -- 1272.jpg","File:Sleeping Beauty Castle Disneyland Anaheim 2013.jpg","File:Farola.001 - Place de la Concorde (Paris).jpg","File:Hôtel des Invalides - 20150801 16h09 (10630).jpg"],
     "hero": { "q": "\"Eiffel Tower\" OR \"Tour Eiffel\" OR Eiffelturm", "photos": [
-      {"file":"File:Hôtel des Invalides - 20150801 16h09 (10630).jpg","url":"https://upload.wikimedia.org/wikipedia/commons/9/94/H%C3%B4tel_des_Invalides_-_20150801_16h09_%2810630%29.jpg","page":"https://commons.wikimedia.org/wiki/File:H%C3%B4tel_des_Invalides_-_20150801_16h09_(10630).jpg","w":3561,"h":2374,"by":"Another one of my pictures: This photograph was taken by Me…","license":"CC BY-SA 4.0","caption":"West face of Les Invalides from the Eiffel Tower in Paris , France.","featured":true,"quality":true,"valued":true}
     ] },
     "do:The Louvre": { "q": "\"Louvre Pyramid\" OR \"Pyramide du Louvre\"", "photos": [
       {"file":"File:Louvre Courtyard, Looking West.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/a/a2/Louvre_Courtyard%2C_Looking_West.jpg","page":"https://commons.wikimedia.org/wiki/File:Louvre_Courtyard,_Looking_West.jpg","w":15359,"h":5730,"by":"Benh LIEU SONG ( Flickr )","license":"CC BY-SA 4.0","caption":"Looking west at the Louvre Museum's Napoleon Courtyard, at dusk.","featured":true,"quality":true}
@@ -760,7 +759,7 @@ window.PHOTOS = {
     ] }
   },
   "barcelona": {
-    "skip": ["File:2026. Tapa de rexistro de bombeiros. Rúa de Clara Campoamor. Santiago de Compostela.jpg","File:View over Callosa d'en Sarrià from Carrer Barceloneta, la Marina Baixa, Alicante, Valencia, Spain, 2025 February.jpg"],
+    "skip": ["File:2026. Tapa de rexistro de bombeiros. Rúa de Clara Campoamor. Santiago de Compostela.jpg","File:View over Callosa d'en Sarrià from Carrer Barceloneta, la Marina Baixa, Alicante, Valencia, Spain, 2025 February.jpg","File:2026. Tapa de rexistro de incendios. Rúa de Clara Campoamor. Santiago de Compostela.jpg"],
     "hero": { "q": "\"Barcelona skyline\" OR \"Skyline of Barcelona\" OR Barcelona panorama", "photos": [
       {"file":"File:Barcelona - Montjuïc - Jardins de Joan Brossa - Panorama View over Barcelona 03.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/0/03/Barcelona_-_Montju%C3%AFc_-_Jardins_de_Joan_Brossa_-_Panorama_View_over_Barcelona_03.jpg","page":"https://commons.wikimedia.org/wiki/File:Barcelona_-_Montju%C3%AFc_-_Jardins_de_Joan_Brossa_-_Panorama_View_over_Barcelona_03.jpg","w":5926,"h":3950,"by":"Txllxt TxllxT","license":"CC BY-SA 4.0","caption":"Barcelona - Montjuïc - Jardins de Joan Brossa - Panorama View over Barcelona"}
     ] },
@@ -777,7 +776,6 @@ window.PHOTOS = {
       {"file":"File:Carromato en Far West (PortAventura) . Tarragona-79.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/5/59/Carromato_en_Far_West_%28PortAventura%29_._Tarragona-79.jpg","page":"https://commons.wikimedia.org/wiki/File:Carromato_en_Far_West_(PortAventura)_._Tarragona-79.jpg","w":5057,"h":3561,"by":"Luis Miguel Bugallo Sánchez (Lmbuga)","license":"CC BY-SA 3.0","caption":"Carriage, \"Far West (Port Aventura)\", Tarragona, Catalonia.","quality":true}
     ] },
     "eat:Tapas": { "q": "tapas", "photos": [
-      {"file":"File:2026. Tapa de rexistro de incendios. Rúa de Clara Campoamor. Santiago de Compostela.jpg","url":"https://upload.wikimedia.org/wikipedia/commons/4/42/2026._Tapa_de_rexistro_de_incendios._R%C3%BAa_de_Clara_Campoamor._Santiago_de_Compostela.jpg","page":"https://commons.wikimedia.org/wiki/File:2026._Tapa_de_rexistro_de_incendios._R%C3%BAa_de_Clara_Campoamor._Santiago_de_Compostela.jpg","w":5803,"h":2797,"by":"Luis Miguel Bugallo Sánchez","license":"CC BY-SA 4.0","caption":"Fire manhole cover. Clara Campoamor Street, Santiago de Compostela, Galicia (Spain).","quality":true}
     ] },
     "eat:Churros with chocolate": { "q": "churros chocolate", "photos": [
       {"file":"File:Churros con chocolate Mexico (32539051653).jpg","url":"https://upload.wikimedia.org/wikipedia/commons/b/b7/Churros_con_chocolate_Mexico_%2832539051653%29.jpg","page":"https://commons.wikimedia.org/wiki/File:Churros_con_chocolate_Mexico_(32539051653).jpg","w":5472,"h":3648,"by":"mike from New York, NY, US","license":"CC BY-SA 2.0","caption":"Churros con chocolate, en México."}

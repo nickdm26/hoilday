@@ -280,7 +280,7 @@ window.PLACES = [
       { name: "Eiffel Tower", what: "Go up at sunset, or watch it sparkle on the hour at night.", tags: ["views", "night"], q: '"Eiffel Tower" night OR "Tour Eiffel" nuit' },
       { name: "Montmartre", what: "A hilltop village with Sacré-Cœur and street artists.", tags: ["views", "art"], q: 'Sacré-Cœur OR "Sacre Coeur" OR Montmartre' },
       { name: "The Seine at night", what: "Walk or take a boat past the lit up sights.", tags: ["night", "views"], q: "Seine night OR Seine nuit OR Seine dusk" },
-      { name: "Disneyland Paris", what: "A day trip by train for the coasters.", tags: ["thrill"], q: '"Disneyland Paris" OR "Sleeping Beauty Castle" OR "Château de la Belle au Bois Dormant"' }
+      { name: "Disneyland Paris", what: "A day trip by train for the coasters.", tags: ["thrill"], q: '"Disneyland Paris" OR "Château de la Belle au Bois Dormant"' }
     ],
     food: [
       { name: "Croissants and pastries", what: "Start every day at a bakery.", q: "croissant OR viennoiserie" },
