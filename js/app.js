@@ -1,110 +1,55 @@
 /* Builds the page from the data in data.js. */
 (function () {
-  const { LEGS, STOPS, MOVES, FLIGHTS, PLACES, CHECKLIST } = window;
+  const { LEGS, STOPS, MOVES, FLIGHTS, PLACES, CHECKLIST, EVENTS } = window;
   const byId = Object.fromEntries(STOPS.map(s => [s.id, s]));
   const $ = sel => document.querySelector(sel);
   const DAY = 86400000;
   const day = iso => new Date(iso + "T00:00:00");
-  const fmt = iso => day(iso).toLocaleDateString("en-NZ", { day: "numeric", month: "short" });
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const fmt = s => day(s).toLocaleDateString("en-NZ", { day: "numeric", month: "short" });
+  const fmtLong = s => day(s).toLocaleDateString("en-NZ", { weekday: "long", day: "numeric", month: "long" });
 
-  // ---------- Hero numbers ----------
   const tripStart = day(STOPS[0].start);
   const tripEnd = day(STOPS[STOPS.length - 1].end);
-  const daysToGo = Math.max(0, Math.ceil((tripStart - new Date()) / DAY));
-  const countries = new Set(STOPS.filter(s => s.country !== "New Zealand").map(s => s.country));
   const flightHours = FLIGHTS.reduce((t, f) => t + f.hours, 0);
+
+  // ---------- Tabs ----------
+  const TABS = ["overview", "map", "flights", "calendar", "places", "checklist"];
+  const onShow = {};
+  function showTab() {
+    const name = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview";
+    TABS.forEach(t => { $("#tab-" + t).hidden = t !== name; });
+    document.querySelectorAll("[data-tab]").forEach(a => a.classList.toggle("is-on", a.dataset.tab === name));
+    window.scrollTo(0, 0);
+    if (onShow[name]) onShow[name]();
+  }
+  window.addEventListener("hashchange", showTab);
+
+  // ---------- Overview: live countdown ----------
+  function tick() {
+    const left = Math.max(0, tripStart - new Date());
+    const parts = [
+      [Math.floor(left / DAY), "days"],
+      [Math.floor(left / 3600000) % 24, "hours"],
+      [Math.floor(left / 60000) % 60, "mins"],
+      [Math.floor(left / 1000) % 60, "secs"]
+    ];
+    $("#countdown").innerHTML =
+      `<div class="countdown-label">${left > 0 ? "Until I leave for Singapore" : "The trip has started!"}</div>
+       <div class="countdown-row">${parts.map(([n, l]) => `<div><b>${n}</b><span>${l}</span></div>`).join("")}</div>`;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  const countries = new Set(STOPS.filter(s => s.country !== "New Zealand").map(s => s.country));
   $("#stats").innerHTML = [
-    [daysToGo, "days to go"],
     [Math.round((tripEnd - tripStart) / DAY), "days away"],
     [countries.size, "countries"],
     [FLIGHTS.length, "flights"],
     [Math.round(flightHours), "hours flying"]
   ].map(([n, label]) => `<div class="stat"><b>${n}</b><span>${label}</span></div>`).join("");
 
-  // ---------- Map ----------
-  const map = L.map("route-map", { scrollWheelZoom: false, worldCopyJump: false, zoomSnap: 0.25 });
-  // Set the view first so the shapes have somewhere to draw.
-  const views = {
-    all: L.latLngBounds(STOPS.map(s => [s.lat, s.lng])),
-    europe: L.latLngBounds(STOPS.filter(s => s.lng > -15 && s.lng < 30).map(s => [s.lat, s.lng]))
-  };
-  map.fitBounds(views.all, { padding: [30, 30] });
-  const css = getComputedStyle(document.documentElement);
-  const visited = new Set(["380", "826", "528", "276", "756", "250", "056", "702", "554", "344"]);
-  const world = topojson.feature(WORLD, WORLD.objects.countries);
-  L.geoJSON(world, {
-    style: f => ({
-      color: css.getPropertyValue("--border-country").trim(),
-      weight: 0.8,
-      fillColor: css.getPropertyValue(visited.has(f.id) ? "--land-visit" : "--land").trim(),
-      fillOpacity: 1
-    }),
-    interactive: false
-  }).addTo(map);
-
-  // Curved line for flights so they look like flight paths.
-  function arc(a, b) {
-    const pts = [];
-    const dx = b[1] - a[1], dy = b[0] - a[0];
-    const bend = 0.18;
-    const c = [(a[0] + b[0]) / 2 + dx * bend, (a[1] + b[1]) / 2 - dy * bend];
-    for (let t = 0; t <= 1.0001; t += 0.04) {
-      pts.push([
-        (1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0],
-        (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]
-      ]);
-    }
-    return pts;
-  }
-
-  MOVES.forEach(m => {
-    const a = byId[m.from], b = byId[m.to];
-    const colour = LEGS[b.leg].colour;
-    const from = [a.lat, a.lng], to = [b.lat, b.lng];
-    if (m.mode === "fly") {
-      L.polyline(arc(from, to), { color: colour, weight: 2.5, dashArray: "6 7", opacity: 0.9 }).addTo(map);
-    } else {
-      L.polyline([from, to], { color: colour, weight: 3.5, opacity: 0.9 }).addTo(map);
-    }
-  });
-
-  let n = 0;
-  STOPS.forEach(s => {
-    if (s.hidePin) return;
-    n += 1;
-    const icon = L.divIcon({
-      className: "",
-      html: `<div class="pin" style="background:${LEGS[s.leg].colour}">${n}</div>`,
-      iconSize: [26, 26], iconAnchor: [13, 13]
-    });
-    L.marker([s.lat, s.lng], { icon, title: s.name })
-      .bindPopup(`<b>${s.flag} ${s.name}, ${s.country}</b><br>${fmt(s.start)}${s.end !== s.start ? " to " + fmt(s.end) : ""}${s.note ? "<br>" + s.note : ""}`)
-      .addTo(map);
-  });
-
-  document.querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", () => {
-    document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("is-on", b === btn));
-    map.flyToBounds(views[btn.dataset.view], { padding: [40, 40], duration: 0.8 });
-  }));
-
-  $("#legend").innerHTML =
-    Object.values(LEGS).map(l => `<span><i style="background:${l.colour}"></i>${l.name}</span>`).join("") +
-    `<span><i class="line dash"></i>Flight</span><span><i class="line"></i>Coach, train or car</span>`;
-
-  // ---------- Flights ----------
-  const maxHours = Math.max(...FLIGHTS.map(f => f.hours));
-  $("#flight-total").textContent = `${FLIGHTS.length} flights, about ${Math.round(flightHours)} hours in the air. Times are rough.`;
-  $("#flight-list").innerHTML = FLIGHTS.map(f => `
-    <div class="flight">
-      <div>
-        <div class="codes">${f.from} → ${f.to}</div>
-        <div class="cities">${f.fromCity} to ${f.toCity} · ${f.date}</div>
-      </div>
-      <div class="bar-wrap"><div class="bar" style="width:calc(${(f.hours / maxHours) * 100}% - 14px);background:${LEGS[f.leg].colour}"></div></div>
-      <div class="hours">${f.hours}h</div>
-    </div>`).join("");
-
-  // ---------- Timeline ----------
+  // Trip at a glance bar
   const span = tripEnd - tripStart;
   const pct = d => ((day(d) - tripStart) / span) * 100;
   const blocks = [];
@@ -122,12 +67,219 @@
     </div>
     <div class="gantt-scale">${scaleDates.map(t => `<span style="left:${pct(t)}%">${fmt(t)}</span>`).join("")}</div>`;
 
-  $("#stop-list").innerHTML = STOPS.map(s => `
-    <li style="--dot:${LEGS[s.leg].colour}">
-      <div class="when">${fmt(s.start)}${s.end !== s.start ? " to " + fmt(s.end) : ""} · ${LEGS[s.leg].name}</div>
-      <div class="where">${s.flag} ${s.name}, ${s.country}</div>
-      ${s.note ? `<div class="note">${s.note}</div>` : ""}
-    </li>`).join("");
+  // ---------- Map (built the first time the tab opens) ----------
+  const legendHtml = Object.values(LEGS).map(l => `<span><i style="background:${l.colour}"></i>${l.name}</span>`).join("");
+  $("#legend").innerHTML = legendHtml +
+    `<span><i class="line dash"></i>Flight</span><span><i class="line"></i>Coach, train or car</span>`;
+
+  let map;
+  onShow.map = () => {
+    if (map) { map.invalidateSize(); return; }
+    map = L.map("route-map", { worldCopyJump: false, zoomSnap: 0.25 });
+    // Set the view first so the shapes have somewhere to draw.
+    const views = {
+      all: L.latLngBounds(STOPS.map(s => [s.lat, s.lng])),
+      europe: L.latLngBounds(STOPS.filter(s => s.lng > -15 && s.lng < 30).map(s => [s.lat, s.lng]))
+    };
+    map.fitBounds(views.all, { padding: [30, 30] });
+
+    const css = getComputedStyle(document.documentElement);
+    const visited = new Set(["380", "826", "528", "276", "756", "250", "056", "702", "554", "344"]);
+    L.geoJSON(topojson.feature(WORLD, WORLD.objects.countries), {
+      style: f => ({
+        color: css.getPropertyValue("--border-country").trim(),
+        weight: 0.8,
+        fillColor: css.getPropertyValue(visited.has(f.id) ? "--land-visit" : "--land").trim(),
+        fillOpacity: 1
+      }),
+      interactive: false
+    }).addTo(map);
+
+    // Curved line for flights so they look like flight paths.
+    function arc(a, b) {
+      const pts = [];
+      const dx = b[1] - a[1], dy = b[0] - a[0];
+      const c = [(a[0] + b[0]) / 2 + dx * 0.18, (a[1] + b[1]) / 2 - dy * 0.18];
+      for (let t = 0; t <= 1.0001; t += 0.04) {
+        pts.push([
+          (1 - t) * (1 - t) * a[0] + 2 * (1 - t) * t * c[0] + t * t * b[0],
+          (1 - t) * (1 - t) * a[1] + 2 * (1 - t) * t * c[1] + t * t * b[1]
+        ]);
+      }
+      return pts;
+    }
+    MOVES.forEach(m => {
+      const a = byId[m.from], b = byId[m.to];
+      const colour = LEGS[b.leg].colour;
+      const from = [a.lat, a.lng], to = [b.lat, b.lng];
+      if (m.mode === "fly") {
+        L.polyline(arc(from, to), { color: colour, weight: 2.5, dashArray: "6 7", opacity: 0.9 }).addTo(map);
+      } else {
+        L.polyline([from, to], { color: colour, weight: 3.5, opacity: 0.9 }).addTo(map);
+      }
+    });
+
+    let n = 0;
+    STOPS.forEach(s => {
+      if (s.hidePin) return;
+      n += 1;
+      const icon = L.divIcon({
+        className: "",
+        html: `<div class="pin" style="background:${LEGS[s.leg].colour}">${n}</div>`,
+        iconSize: [26, 26], iconAnchor: [13, 13]
+      });
+      L.marker([s.lat, s.lng], { icon, title: s.name })
+        .bindPopup(`<b>${s.flag} ${s.name}, ${s.country}</b><br>${fmt(s.start)}${s.end !== s.start ? " to " + fmt(s.end) : ""}${s.note ? "<br>" + s.note : ""}`)
+        .addTo(map);
+    });
+
+    document.querySelectorAll("[data-view]").forEach(btn => btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("is-on", b === btn));
+      map.flyToBounds(views[btn.dataset.view], { padding: [40, 40], duration: 0.8 });
+    }));
+  };
+
+  // ---------- Flights ----------
+  const maxHours = Math.max(...FLIGHTS.map(f => f.hours));
+  $("#flight-total").textContent = `${FLIGHTS.length} flights, about ${Math.round(flightHours)} hours in the air. Times are rough.`;
+  $("#flight-list").innerHTML = FLIGHTS.map(f => `
+    <div class="flight">
+      <div>
+        <div class="codes">${f.from} → ${f.to}</div>
+        <div class="cities">${f.fromCity} to ${f.toCity} · ${f.date}</div>
+      </div>
+      <div class="bar-wrap"><div class="bar" style="width:calc(${(f.hours / maxHours) * 100}% - 14px);background:${LEGS[f.leg].colour}"></div></div>
+      <div class="hours">${f.hours}h</div>
+    </div>`).join("");
+
+  // ---------- Calendar ----------
+  // Where am I on a given day? Travel days list every stop touched that day.
+  function dayInfo(d) {
+    const here = STOPS.filter(s => s.start <= d && d <= s.end);
+    if (!here.length) return null;
+    const names = [];
+    here.forEach(s => {
+      const label = s.short || s.name;
+      if (names[names.length - 1] !== label) names.push(label);
+    });
+    const main = here[here.length - 1];
+    return {
+      stops: here,
+      label: names.length > 1 ? `${names[0]} → ${names[names.length - 1]}` : names[0],
+      leg: main.leg,
+      flights: FLIGHTS.filter(f => f.day === d),
+      events: EVENTS.filter(e => e.day === d)
+    };
+  }
+
+  $("#cal-legend").innerHTML = legendHtml + `<span>✈️ Flight day</span>`;
+
+  const months = [[2027, 2], [2027, 3]]; // March and April 2027 (months start at 0)
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  function cell(date, other, big) {
+    const d = iso(date);
+    const info = dayInfo(d);
+    if (!info) return `<div class="cal-day ${other ? "other" : ""}"><span class="num">${date.getDate()}</span></div>`;
+    const icons = info.events.map(e => e.icon).join("") + (info.flights.length ? "✈️" : "");
+    const lastFlag = info.stops[info.stops.length - 1].flag;
+    const flag = big ? lastFlag + " " : "";
+    return `
+      <button class="cal-day in-trip ${other ? "other" : ""}" data-day="${d}" style="--leg:${LEGS[info.leg].colour}">
+        <span class="num">${big ? date.toLocaleDateString("en-NZ", { weekday: "short", day: "numeric", month: "short" }) : date.getDate()}</span>
+        ${icons ? `<span class="icons">${icons}</span>` : ""}
+        <span class="where">${flag}${info.label}</span>
+        ${big ? "" : `<span class="flag-only">${lastFlag}</span>`}
+      </button>`;
+  }
+
+  // Month view
+  $("#months").innerHTML = months.map(([y, m]) => {
+    const first = new Date(y, m, 1);
+    const lead = (first.getDay() + 6) % 7; // Monday first
+    const daysIn = new Date(y, m + 1, 0).getDate();
+    const cells = Math.ceil((lead + daysIn) / 7) * 7;
+    let html = "";
+    for (let i = 0; i < cells; i++) {
+      const date = new Date(y, m, 1 - lead + i);
+      html += cell(date, date.getMonth() !== m, false);
+    }
+    return `
+      <div class="month">
+        <h3>${first.toLocaleDateString("en-NZ", { month: "long", year: "numeric" })}</h3>
+        <div class="cal-grid">
+          ${weekdays.map(w => `<div class="cal-head">${w}</div>`).join("")}
+          ${html}
+        </div>
+      </div>`;
+  }).join("");
+
+  // Week view: one row per week of the trip, Monday to Sunday
+  const firstMonday = new Date(tripStart);
+  firstMonday.setDate(firstMonday.getDate() - ((firstMonday.getDay() + 6) % 7));
+  let weeksHtml = "";
+  for (let w = 0, mon = new Date(firstMonday); mon <= tripEnd; w++, mon.setDate(mon.getDate() + 7)) {
+    let row = "";
+    for (let i = 0; i < 7; i++) row += cell(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i), false, true);
+    weeksHtml += `
+      <div class="week">
+        <h3>Week ${w + 1} <span class="muted small">from ${fmt(iso(mon))}</span></h3>
+        <div class="cal-grid week-grid">${row}</div>
+      </div>`;
+  }
+  $("#cal-week").innerHTML =
+    `<div class="cal-grid week-grid week-head">${weekdays.map(w => `<div class="cal-head">${w}</div>`).join("")}</div>` + weeksHtml;
+
+  // Day view: one card per day with everything on it
+  let dayHtml = "";
+  for (let date = new Date(tripStart); date <= tripEnd; date.setDate(date.getDate() + 1)) {
+    const d = iso(date);
+    const info = dayInfo(d);
+    const seen = new Set();
+    const places = info.stops.filter(s => !seen.has(s.name) && seen.add(s.name));
+    dayHtml += `
+      <div class="day-row" style="--leg:${LEGS[info.leg].colour}">
+        <div class="day-date"><span>${date.toLocaleDateString("en-NZ", { weekday: "short" })}</span><b>${date.getDate()}</b><span>${date.toLocaleDateString("en-NZ", { month: "short" })}</span></div>
+        <div class="day-body">
+          <div class="day-leg">${LEGS[info.leg].name}</div>
+          ${places.map(s => `<div><b>${s.flag} ${s.name}, ${s.country}</b>${s.note && s.start === d ? ` · ${s.note}` : ""}</div>`).join("")}
+          ${info.flights.map(f => `<div>✈️ Flight ${f.from} → ${f.to}, about ${f.hours} hours</div>`).join("")}
+          ${info.events.map(e => `<div>${e.icon} ${e.text}</div>`).join("")}
+        </div>
+      </div>`;
+  }
+  $("#cal-day").innerHTML = dayHtml;
+
+  function showDay(d) {
+    const info = dayInfo(d);
+    document.querySelectorAll(".cal-day.is-on").forEach(el => el.classList.remove("is-on"));
+    document.querySelectorAll(`[data-day="${d}"]`).forEach(el => el.classList.add("is-on"));
+    const seen = new Set();
+    const places = info.stops.filter(s => !seen.has(s.name) && seen.add(s.name));
+    $("#day-detail").innerHTML = `
+      <div class="detail-card" style="--leg:${LEGS[info.leg].colour}">
+        <div class="detail-date">${fmtLong(d)} · ${LEGS[info.leg].name}</div>
+        ${places.map(s => `<div><b>${s.flag} ${s.name}, ${s.country}</b>${s.note ? ` · ${s.note}` : ""}</div>`).join("")}
+        ${info.flights.map(f => `<div>✈️ Flight ${f.from} → ${f.to}, about ${f.hours} hours</div>`).join("")}
+        ${info.events.map(e => `<div>${e.icon} ${e.text}</div>`).join("")}
+      </div>`;
+  }
+  document.querySelectorAll("[data-day]").forEach(el => el.addEventListener("click", () => {
+    showDay(el.dataset.day);
+    $("#day-detail").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }));
+  showDay(STOPS[0].start);
+
+  // Switch between Month, Week and Day. Remember the choice in this browser.
+  function showCal(view) {
+    ["month", "week", "day"].forEach(v => { $("#cal-" + v).hidden = v !== view; });
+    $("#cal-pick").hidden = view === "day";
+    document.querySelectorAll("[data-cal]").forEach(b => b.classList.toggle("is-on", b.dataset.cal === view));
+    try { localStorage.setItem("trip-cal-view", view); } catch (e) { /* fine */ }
+  }
+  document.querySelectorAll("[data-cal]").forEach(b => b.addEventListener("click", () => showCal(b.dataset.cal)));
+  let savedView = "month";
+  try { savedView = localStorage.getItem("trip-cal-view") || "month"; } catch (e) { /* fine */ }
+  showCal(savedView);
 
   // ---------- Places ----------
   function renderPlaces(filter) {
@@ -206,4 +358,6 @@
     updateCount();
   }));
   updateCount();
+
+  showTab();
 })();
