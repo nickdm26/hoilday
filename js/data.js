@@ -17,21 +17,21 @@ window.STOPS = [
   { id: "akl", name: "Auckland",     country: "New Zealand", flag: "🇳🇿", lat: -36.85, lng: 174.76, leg: "home",    start: "2027-03-20", end: "2027-03-20", note: "Leave home" },
   { id: "sin", name: "Singapore",    country: "Singapore",   flag: "🇸🇬", lat: 1.29,   lng: 103.85, leg: "wedding", start: "2027-03-20", end: "2027-03-28", note: "Wedding on Friday 26 March" },
   { id: "mil", name: "Milan",        country: "Italy",       flag: "🇮🇹", lat: 45.46,  lng: 9.19,   leg: "snow",    start: "2027-03-28", end: "2027-03-29", note: "Land in Europe. Snow hub" },
-  { id: "cer", name: "Cervinia or Livigno", country: "Italy", flag: "🇮🇹", lat: 45.94, lng: 7.63,  leg: "snow",    start: "2027-03-29", end: "2027-04-09", note: "About 6 days riding plus rest days. Pick the resort from the snow forecast" },
+  { id: "cer", name: "Cervinia or Livigno", short: "Snow", country: "Italy", flag: "🇮🇹", lat: 45.94, lng: 7.63,  leg: "snow",    start: "2027-03-29", end: "2027-04-09", note: "About 6 days riding plus rest days. Pick the resort from the snow forecast" },
   { id: "lon", name: "London",       country: "England",     flag: "🇬🇧", lat: 51.51,  lng: -0.13,  leg: "contiki", start: "2027-04-09", end: "2027-04-11", note: "Rest, then meet the Contiki group" },
   { id: "ams", name: "Amsterdam",    country: "Netherlands", flag: "🇳🇱", lat: 52.37,  lng: 4.90,   leg: "contiki", start: "2027-04-11", end: "2027-04-12" },
-  { id: "rhi", name: "Rhine Valley", country: "Germany",     flag: "🇩🇪", lat: 50.15,  lng: 7.71,   leg: "contiki", start: "2027-04-12", end: "2027-04-13" },
+  { id: "rhi", name: "Rhine Valley", short: "Rhine", country: "Germany",     flag: "🇩🇪", lat: 50.15,  lng: 7.71,   leg: "contiki", start: "2027-04-12", end: "2027-04-13" },
   { id: "mun", name: "Munich",       country: "Germany",     flag: "🇩🇪", lat: 48.14,  lng: 11.58,  leg: "contiki", start: "2027-04-13", end: "2027-04-14" },
   { id: "ven", name: "Venice",       country: "Italy",       flag: "🇮🇹", lat: 45.44,  lng: 12.33,  leg: "contiki", start: "2027-04-14", end: "2027-04-16" },
   { id: "luc", name: "Lucerne",      country: "Switzerland", flag: "🇨🇭", lat: 47.05,  lng: 8.31,   leg: "contiki", start: "2027-04-16", end: "2027-04-18" },
   { id: "par", name: "Paris",        country: "France",      flag: "🇫🇷", lat: 48.86,  lng: 2.35,   leg: "contiki", start: "2027-04-18", end: "2027-04-20" },
   { id: "lon2", name: "London",      country: "England",     flag: "🇬🇧", lat: 51.51,  lng: -0.13,  leg: "contiki", start: "2027-04-20", end: "2027-04-21", note: "Contiki ends", hidePin: true },
-  { id: "bel", name: "Bruges and Brussels", country: "Belgium", flag: "🇧🇪", lat: 51.05, lng: 3.85, leg: "solo",  start: "2027-04-21", end: "2027-04-23", note: "Chocolate and waffles. Eurostar from London" },
+  { id: "bel", name: "Bruges and Brussels", short: "Belgium", country: "Belgium", flag: "🇧🇪", lat: 51.05, lng: 3.85, leg: "solo",  start: "2027-04-21", end: "2027-04-23", note: "Chocolate and waffles. Eurostar from London" },
   { id: "rom", name: "Rome",         country: "Italy",       flag: "🇮🇹", lat: 41.90,  lng: 12.50,  leg: "solo",    start: "2027-04-23", end: "2027-04-26", note: "Colosseum, Vatican, Trastevere" },
   { id: "flo", name: "Florence",     country: "Italy",       flag: "🇮🇹", lat: 43.77,  lng: 11.26,  leg: "solo",    start: "2027-04-26", end: "2027-04-27", note: "Uffizi and the Statue of David" },
-  { id: "gar", name: "Lake Garda",   country: "Italy",       flag: "🇮🇹", lat: 45.45,  lng: 10.71,  leg: "solo",    start: "2027-04-27", end: "2027-04-29", note: "Gardaland theme park" },
+  { id: "gar", name: "Lake Garda", short: "Garda",   country: "Italy",       flag: "🇮🇹", lat: 45.45,  lng: 10.71,  leg: "solo",    start: "2027-04-27", end: "2027-04-29", note: "Gardaland theme park" },
   { id: "mil2", name: "Milan",       country: "Italy",       flag: "🇮🇹", lat: 45.46,  lng: 9.19,   leg: "home",    start: "2027-04-29", end: "2027-04-29", note: "Train to Milan airport", hidePin: true },
-  { id: "hkg", name: "Hong Kong",    country: "Hong Kong",   flag: "🇭🇰", lat: 22.30,  lng: 114.17, leg: "home",    start: "2027-04-29", end: "2027-05-01", note: "1 or 2 nights to rest my back" },
+  { id: "hkg", name: "Hong Kong", short: "Hong Kong",    country: "Hong Kong",   flag: "🇭🇰", lat: 22.30,  lng: 114.17, leg: "home",    start: "2027-04-29", end: "2027-05-01", note: "1 or 2 nights to rest my back" },
   { id: "akl2", name: "Auckland",    country: "New Zealand", flag: "🇳🇿", lat: -36.85, lng: 174.76, leg: "home",    start: "2027-05-01", end: "2027-05-01", note: "Home", hidePin: true }
 ];
 
@@ -59,12 +59,12 @@ window.MOVES = [
 
 // Flights. Hours are rough flying times.
 window.FLIGHTS = [
-  { from: "AKL", fromCity: "Auckland",  to: "SIN", toCity: "Singapore", date: "Sat 20 Mar", hours: 10.5, leg: "wedding" },
-  { from: "SIN", fromCity: "Singapore", to: "MXP", toCity: "Milan",     date: "Sun 28 Mar", hours: 13,   leg: "snow" },
-  { from: "MXP", fromCity: "Milan",     to: "LHR", toCity: "London",    date: "Fri 9 Apr",  hours: 2,    leg: "contiki" },
-  { from: "BRU", fromCity: "Brussels",  to: "FCO", toCity: "Rome",      date: "Fri 23 Apr", hours: 2.25, leg: "solo" },
-  { from: "MXP", fromCity: "Milan",     to: "HKG", toCity: "Hong Kong", date: "Thu 29 Apr", hours: 12,   leg: "home" },
-  { from: "HKG", fromCity: "Hong Kong", to: "AKL", toCity: "Auckland",  date: "Sat 1 May",  hours: 11,   leg: "home" }
+  { from: "AKL", fromCity: "Auckland",  to: "SIN", toCity: "Singapore", date: "Sat 20 Mar", day: "2027-03-20", hours: 10.5, leg: "wedding" },
+  { from: "SIN", fromCity: "Singapore", to: "MXP", toCity: "Milan",     date: "Sun 28 Mar", day: "2027-03-28", hours: 13,   leg: "snow" },
+  { from: "MXP", fromCity: "Milan",     to: "LHR", toCity: "London",    date: "Fri 9 Apr", day: "2027-04-09",  hours: 2,    leg: "contiki" },
+  { from: "BRU", fromCity: "Brussels",  to: "FCO", toCity: "Rome",      date: "Fri 23 Apr", day: "2027-04-23", hours: 2.25, leg: "solo" },
+  { from: "MXP", fromCity: "Milan",     to: "HKG", toCity: "Hong Kong", date: "Thu 29 Apr", day: "2027-04-29", hours: 12,   leg: "home" },
+  { from: "HKG", fromCity: "Hong Kong", to: "AKL", toCity: "Auckland",  date: "Sat 1 May", day: "2027-05-01",  hours: 11,   leg: "home" }
 ];
 
 // Place cards. "wiki" is the Wikipedia page used for the photo.
@@ -156,4 +156,10 @@ window.CHECKLIST = [
     "Bills, rent and car rego covered",
     "Copies of passport and insurance in my email"
   ]}
+];
+
+// Special days shown on the calendar.
+window.EVENTS = [
+  { day: "2027-03-26", icon: "💍", text: "The wedding" },
+  { day: "2027-03-28", icon: "🐣", text: "Easter Sunday. Resorts are busy" }
 ];

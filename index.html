@@ -9,50 +9,67 @@
 </head>
 <body>
   <nav class="nav">
-    <a class="nav-home" href="#top">✈️ Big Trip 2027</a>
-    <div class="nav-links">
-      <a href="#map">Map</a>
-      <a href="#flights">Flights</a>
-      <a href="#timeline">Timeline</a>
-      <a href="#places">Places</a>
-      <a href="#checklist">Checklist</a>
+    <a class="nav-home" href="#overview">✈️ Big Trip 2027</a>
+    <div class="tabs" role="tablist">
+      <a href="#overview" data-tab="overview">Overview</a>
+      <a href="#map" data-tab="map">Map</a>
+      <a href="#flights" data-tab="flights">Flights</a>
+      <a href="#calendar" data-tab="calendar">Calendar</a>
+      <a href="#places" data-tab="places">Places</a>
+      <a href="#checklist" data-tab="checklist">Checklist</a>
     </div>
   </nav>
 
-  <header class="hero" id="top">
-    <div class="wrap">
+  <main>
+    <section id="tab-overview" class="panel wrap">
       <p class="eyebrow">Singapore wedding + Europe</p>
       <h1>Nick's Big Trip 2027</h1>
       <p class="lead">20 March to 1 May 2027. A wedding, some snow, a Contiki and a lot of food.</p>
-      <div class="stats" id="stats"></div>
-      <p class="small muted">This is the current plan. Nothing is booked yet.</p>
-    </div>
-  </header>
 
-  <main>
-    <section id="map" class="wrap">
+      <div class="countdown" id="countdown" aria-live="off"></div>
+      <div class="stats" id="stats"></div>
+
+      <h2>Trip at a glance</h2>
+      <div class="gantt" id="gantt"></div>
+      <p class="small muted">This is the current plan. Nothing is booked yet.</p>
+    </section>
+
+    <section id="tab-map" class="panel wrap">
       <h2>The route</h2>
       <div class="map-tools">
         <button class="chip is-on" data-view="all">Whole trip</button>
         <button class="chip" data-view="europe">Europe</button>
+        <span class="tool-gap"></span>
+        <button class="chip is-on" data-style="simple">Simple</button>
+        <button class="chip" data-style="streets">Streets</button>
+        <button class="chip" data-style="satellite">Satellite</button>
       </div>
       <div id="route-map" class="route-map" aria-label="Map of the trip route"></div>
       <div class="legend" id="legend"></div>
     </section>
 
-    <section id="flights" class="wrap">
+    <section id="tab-flights" class="panel wrap">
       <h2>Flights</h2>
       <p class="muted" id="flight-total"></p>
       <div class="flights" id="flight-list"></div>
     </section>
 
-    <section id="timeline" class="wrap">
-      <h2>Timeline</h2>
-      <div class="gantt" id="gantt"></div>
-      <ol class="stops" id="stop-list"></ol>
+    <section id="tab-calendar" class="panel wrap">
+      <h2>Calendar</h2>
+      <div class="map-tools" id="cal-views">
+        <button class="chip" data-cal="month">Month</button>
+        <button class="chip" data-cal="week">Week</button>
+        <button class="chip" data-cal="day">Day</button>
+      </div>
+      <div class="legend" id="cal-legend"></div>
+      <div id="cal-pick">
+        <p class="muted small">Tap a day to see where I am.</p>
+        <div class="day-detail" id="day-detail"></div>
+      </div>
+      <div id="cal-body"></div>
     </section>
 
-    <section id="places" class="wrap">
+    <section id="tab-places" class="panel wrap">
       <h2>Places</h2>
       <div class="map-tools" id="place-filter">
         <button class="chip is-on" data-filter="route">On my route</button>
@@ -63,7 +80,7 @@
       <p class="small muted">Photos come from Wikipedia and need the internet to load.</p>
     </section>
 
-    <section id="checklist" class="wrap">
+    <section id="tab-checklist" class="panel wrap">
       <h2>Easy-to-forget checklist</h2>
       <p class="muted"><span id="check-count"></span> Ticks are saved in this browser.</p>
       <div class="checklist" id="check-groups"></div>
@@ -71,7 +88,7 @@
   </main>
 
   <footer class="wrap footer small muted">
-    Map shapes from Natural Earth. Map made with Leaflet. Photos from Wikipedia.
+    Map shapes from Natural Earth. Map made with Leaflet. Street maps from CARTO and OpenStreetMap. Satellite from Esri. Photos from Wikipedia.
   </footer>
 
   <script src="vendor/leaflet/leaflet.js"></script>
