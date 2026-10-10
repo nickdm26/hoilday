@@ -75,7 +75,7 @@
   let map;
   onShow.map = () => {
     if (map) { map.invalidateSize(); return; }
-    map = L.map("route-map", { worldCopyJump: false, zoomSnap: 0.25 });
+    map = L.map("route-map", { worldCopyJump: false, zoomSnap: 0.25, maxZoom: 18 });
     // Set the view first so the shapes have somewhere to draw.
     const views = {
       all: L.latLngBounds(STOPS.map(s => [s.lat, s.lng])),
@@ -83,17 +83,39 @@
     };
     map.fitBounds(views.all, { padding: [30, 30] });
 
+    // The base map sits in its own layer under the route, so switching never covers the lines.
+    map.createPane("base").style.zIndex = 250;
     const css = getComputedStyle(document.documentElement);
     const visited = new Set(["380", "826", "528", "276", "756", "250", "056", "702", "554", "344"]);
-    L.geoJSON(topojson.feature(WORLD, WORLD.objects.countries), {
-      style: f => ({
-        color: css.getPropertyValue("--border-country").trim(),
-        weight: 0.8,
-        fillColor: css.getPropertyValue(visited.has(f.id) ? "--land-visit" : "--land").trim(),
-        fillOpacity: 1
+    // Three looks for the map. Simple is offline country shapes. The others are online map tiles.
+    const looks = {
+      simple: L.geoJSON(topojson.feature(WORLD, WORLD.objects.countries), {
+        pane: "base",
+        style: f => ({
+          color: css.getPropertyValue("--border-country").trim(),
+          weight: 0.8,
+          fillColor: css.getPropertyValue(visited.has(f.id) ? "--land-visit" : "--land").trim(),
+          fillOpacity: 1
+        }),
+        interactive: false
       }),
-      interactive: false
-    }).addTo(map);
+      streets: L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd", maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }),
+      satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 18,
+        attribution: "Imagery &copy; Esri"
+      })
+    };
+    let look = "simple";
+    looks.simple.addTo(map);
+    document.querySelectorAll("[data-style]").forEach(btn => btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-style]").forEach(b => b.classList.toggle("is-on", b === btn));
+      map.removeLayer(looks[look]);
+      look = btn.dataset.style;
+      looks[look].addTo(map);
+    }));
 
     // Curved line for flights so they look like flight paths.
     function arc(a, b) {
@@ -192,87 +214,101 @@
       </button>`;
   }
 
-  // Month view
-  $("#months").innerHTML = months.map(([y, m]) => {
-    const first = new Date(y, m, 1);
-    const lead = (first.getDay() + 6) % 7; // Monday first
-    const daysIn = new Date(y, m + 1, 0).getDate();
-    const cells = Math.ceil((lead + daysIn) / 7) * 7;
-    let html = "";
-    for (let i = 0; i < cells; i++) {
-      const date = new Date(y, m, 1 - lead + i);
-      html += cell(date, date.getMonth() !== m, false);
+  // Each view is a function that turns the same data into HTML.
+  // Only the view you pick is drawn into the page.
+  const calViews = {
+    month() {
+      return `<div class="months">${months.map(([y, m]) => {
+        const first = new Date(y, m, 1);
+        const lead = (first.getDay() + 6) % 7; // Monday first
+        const daysIn = new Date(y, m + 1, 0).getDate();
+        let html = "";
+        for (let i = 0; i < Math.ceil((lead + daysIn) / 7) * 7; i++) {
+          const date = new Date(y, m, 1 - lead + i);
+          html += cell(date, date.getMonth() !== m, false);
+        }
+        return `
+          <div class="month">
+            <h3>${first.toLocaleDateString("en-NZ", { month: "long", year: "numeric" })}</h3>
+            <div class="cal-grid">${weekdays.map(w => `<div class="cal-head">${w}</div>`).join("")}${html}</div>
+          </div>`;
+      }).join("")}</div>`;
+    },
+
+    // One row per week of the trip, Monday to Sunday
+    week() {
+      const mon = new Date(tripStart);
+      mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+      let html = `<div class="cal-grid week-grid week-head">${weekdays.map(w => `<div class="cal-head">${w}</div>`).join("")}</div>`;
+      for (let w = 1; mon <= tripEnd; w++, mon.setDate(mon.getDate() + 7)) {
+        let row = "";
+        for (let i = 0; i < 7; i++) row += cell(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i), false, true);
+        html += `
+          <div class="week">
+            <h3>Week ${w} <span class="muted small">from ${fmt(iso(mon))}</span></h3>
+            <div class="cal-grid week-grid">${row}</div>
+          </div>`;
+      }
+      return html;
+    },
+
+    // One card per day with everything on it
+    day() {
+      let html = "";
+      for (let date = new Date(tripStart); date <= tripEnd; date.setDate(date.getDate() + 1)) {
+        const d = iso(date);
+        const info = dayInfo(d);
+        html += `
+          <div class="day-row" style="--leg:${LEGS[info.leg].colour}">
+            <div class="day-date"><span>${date.toLocaleDateString("en-NZ", { weekday: "short" })}</span><b>${date.getDate()}</b><span>${date.toLocaleDateString("en-NZ", { month: "short" })}</span></div>
+            <div class="day-body">
+              <div class="day-leg">${LEGS[info.leg].name}</div>
+              ${dayLines(d, info, true)}
+            </div>
+          </div>`;
+      }
+      return html;
     }
-    return `
-      <div class="month">
-        <h3>${first.toLocaleDateString("en-NZ", { month: "long", year: "numeric" })}</h3>
-        <div class="cal-grid">
-          ${weekdays.map(w => `<div class="cal-head">${w}</div>`).join("")}
-          ${html}
-        </div>
-      </div>`;
-  }).join("");
+  };
 
-  // Week view: one row per week of the trip, Monday to Sunday
-  const firstMonday = new Date(tripStart);
-  firstMonday.setDate(firstMonday.getDate() - ((firstMonday.getDay() + 6) % 7));
-  let weeksHtml = "";
-  for (let w = 0, mon = new Date(firstMonday); mon <= tripEnd; w++, mon.setDate(mon.getDate() + 7)) {
-    let row = "";
-    for (let i = 0; i < 7; i++) row += cell(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i), false, true);
-    weeksHtml += `
-      <div class="week">
-        <h3>Week ${w + 1} <span class="muted small">from ${fmt(iso(mon))}</span></h3>
-        <div class="cal-grid week-grid">${row}</div>
-      </div>`;
-  }
-  $("#cal-week").innerHTML =
-    `<div class="cal-grid week-grid week-head">${weekdays.map(w => `<div class="cal-head">${w}</div>`).join("")}</div>` + weeksHtml;
-
-  // Day view: one card per day with everything on it
-  let dayHtml = "";
-  for (let date = new Date(tripStart); date <= tripEnd; date.setDate(date.getDate() + 1)) {
-    const d = iso(date);
-    const info = dayInfo(d);
+  // The lines for one day. firstDayNotes only shows a stop's note on its first day.
+  function dayLines(d, info, firstDayNotes) {
     const seen = new Set();
     const places = info.stops.filter(s => !seen.has(s.name) && seen.add(s.name));
-    dayHtml += `
-      <div class="day-row" style="--leg:${LEGS[info.leg].colour}">
-        <div class="day-date"><span>${date.toLocaleDateString("en-NZ", { weekday: "short" })}</span><b>${date.getDate()}</b><span>${date.toLocaleDateString("en-NZ", { month: "short" })}</span></div>
-        <div class="day-body">
-          <div class="day-leg">${LEGS[info.leg].name}</div>
-          ${places.map(s => `<div><b>${s.flag} ${s.name}, ${s.country}</b>${s.note && s.start === d ? ` · ${s.note}` : ""}</div>`).join("")}
-          ${info.flights.map(f => `<div>✈️ Flight ${f.from} → ${f.to}, about ${f.hours} hours</div>`).join("")}
-          ${info.events.map(e => `<div>${e.icon} ${e.text}</div>`).join("")}
-        </div>
-      </div>`;
+    return places.map(s => {
+      const note = s.note && (!firstDayNotes || s.start === d) ? ` · ${s.note}` : "";
+      return `<div><b>${s.flag} ${s.name}, ${s.country}</b>${note}</div>`;
+    }).join("") +
+      info.flights.map(f => `<div>✈️ Flight ${f.from} → ${f.to}, about ${f.hours} hours</div>`).join("") +
+      info.events.map(e => `<div>${e.icon} ${e.text}</div>`).join("");
   }
-  $("#cal-day").innerHTML = dayHtml;
 
+  let pickedDay = STOPS[0].start;
   function showDay(d) {
+    pickedDay = d;
     const info = dayInfo(d);
     document.querySelectorAll(".cal-day.is-on").forEach(el => el.classList.remove("is-on"));
     document.querySelectorAll(`[data-day="${d}"]`).forEach(el => el.classList.add("is-on"));
-    const seen = new Set();
-    const places = info.stops.filter(s => !seen.has(s.name) && seen.add(s.name));
     $("#day-detail").innerHTML = `
       <div class="detail-card" style="--leg:${LEGS[info.leg].colour}">
         <div class="detail-date">${fmtLong(d)} · ${LEGS[info.leg].name}</div>
-        ${places.map(s => `<div><b>${s.flag} ${s.name}, ${s.country}</b>${s.note ? ` · ${s.note}` : ""}</div>`).join("")}
-        ${info.flights.map(f => `<div>✈️ Flight ${f.from} → ${f.to}, about ${f.hours} hours</div>`).join("")}
-        ${info.events.map(e => `<div>${e.icon} ${e.text}</div>`).join("")}
+        ${dayLines(d, info, false)}
       </div>`;
   }
-  document.querySelectorAll("[data-day]").forEach(el => el.addEventListener("click", () => {
-    showDay(el.dataset.day);
+  // One click handler for every day box, whichever view is showing.
+  $("#cal-body").addEventListener("click", e => {
+    const box = e.target.closest("[data-day]");
+    if (!box) return;
+    showDay(box.dataset.day);
     $("#day-detail").scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }));
-  showDay(STOPS[0].start);
+  });
 
   // Switch between Month, Week and Day. Remember the choice in this browser.
   function showCal(view) {
-    ["month", "week", "day"].forEach(v => { $("#cal-" + v).hidden = v !== view; });
+    if (!calViews[view]) view = "month";
+    $("#cal-body").innerHTML = calViews[view]();
     $("#cal-pick").hidden = view === "day";
+    if (view !== "day") showDay(pickedDay);
     document.querySelectorAll("[data-cal]").forEach(b => b.classList.toggle("is-on", b.dataset.cal === view));
     try { localStorage.setItem("trip-cal-view", view); } catch (e) { /* fine */ }
   }

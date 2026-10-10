@@ -39,6 +39,10 @@
       <div class="map-tools">
         <button class="chip is-on" data-view="all">Whole trip</button>
         <button class="chip" data-view="europe">Europe</button>
+        <span class="tool-gap"></span>
+        <button class="chip is-on" data-style="simple">Simple</button>
+        <button class="chip" data-style="streets">Streets</button>
+        <button class="chip" data-style="satellite">Satellite</button>
       </div>
       <div id="route-map" class="route-map" aria-label="Map of the trip route"></div>
       <div class="legend" id="legend"></div>
@@ -62,9 +66,7 @@
         <p class="muted small">Tap a day to see where I am.</p>
         <div class="day-detail" id="day-detail"></div>
       </div>
-      <div class="cal-view" id="cal-month"><div class="months" id="months"></div></div>
-      <div class="cal-view" id="cal-week"></div>
-      <div class="cal-view" id="cal-day"></div>
+      <div id="cal-body"></div>
     </section>
 
     <section id="tab-places" class="panel wrap">
@@ -86,7 +88,7 @@
   </main>
 
   <footer class="wrap footer small muted">
-    Map shapes from Natural Earth. Map made with Leaflet. Photos from Wikipedia.
+    Map shapes from Natural Earth. Map made with Leaflet. Street maps from CARTO and OpenStreetMap. Satellite from Esri. Photos from Wikipedia.
   </footer>
 
   <script src="vendor/leaflet/leaflet.js"></script>

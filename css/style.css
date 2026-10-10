@@ -96,6 +96,7 @@ a { color: var(--accent); }
   padding: 6px 14px; border-radius: 999px; cursor: pointer;
   border: 1px solid var(--line); background: var(--card); color: var(--text);
 }
+.tool-gap { width: 12px; }
 .chip.is-on { background: var(--text); color: var(--bg); border-color: var(--text); }
 
 /* Map */
@@ -163,7 +164,7 @@ a { color: var(--accent); }
 }
 .cal-day.in-trip:hover { background: color-mix(in srgb, var(--leg) 26%, var(--card)); }
 .cal-day.is-on { outline: 3px solid var(--leg); outline-offset: 1px; }
-.cal-view[hidden], #cal-pick[hidden] { display: none; }
+#cal-pick[hidden] { display: none; }
 .week { margin-bottom: 14px; }
 .week h3 { font-size: 1rem; margin-bottom: 6px; }
 .week-head { position: sticky; top: 58px; z-index: 5; background: var(--bg); padding: 4px 0; }
