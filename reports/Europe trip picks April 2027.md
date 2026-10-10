@@ -114,7 +114,7 @@ Your tour is 9 nights. Below is my best guess of the nights. I worked it out fro
 | Berlin, Germany | Maybe | Best nightlife, but far from both routes. |
 | Vienna, Austria | Maybe | Cakes and art are great, but it costs too many days. |
 | Naples, Italy and Pompeii, Italy | Maybe | Pizza heaven, but Pompeii means lots of walking on uneven stones. |
-| Amalfi Coast, Italy | Skip | Stairs and buses. Hard on your back and budget. |
+| Amalfi Coast, Italy | Maybe | Stunning views. Go slow with 2 nights in one town and use ferries. Lots of stairs, so pick a base near the water. |
 | Milan, Italy | Maybe | Good for nightlife and as a train hub. Design Week in mid-April can push prices up (unverified). |
 | Innsbruck, Austria | Maybe | Easy cable-car views, but bike parks are still closed in April (unverified). |
 | Beaches and surfing anywhere | Skip | The North Sea is about 9-11°C in April (unverified). |
